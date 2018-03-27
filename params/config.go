@@ -51,8 +51,8 @@ var (
 		EIP155Block:         big.NewInt(2675000),
 		EIP158Block:         big.NewInt(2675000),
 		ByzantiumBlock:      big.NewInt(4370000),
-		ConstantinopleBlock: big.NewInt(7280000),
-		PetersburgBlock:     big.NewInt(7280000),
+		DisposalBlock:       nil,
+		ConstantinopleBlock: nil,
 		Ethash:              new(EthashConfig),
 	}
 
@@ -65,8 +65,9 @@ var (
 		EIP150Block:         big.NewInt(0),
 		EIP150Hash:          common.HexToHash("0x4d7df65052bb21264d6ad2d6fe2d5578a36be12f71bf8d0559b0c15c4dc539b5"),
 		EIP155Block:         big.NewInt(0),
-		EIP158Block:         big.NewInt(0x7fffffffffffffff),
-		ByzantiumBlock:      big.NewInt(0x7fffffffffffffff),
+		EIP158Block:         nil,
+		ByzantiumBlock:      nil,
+		DisposalBlock:       big.NewInt(0),
 		ConstantinopleBlock: nil,
 		Ethash:              new(EthashConfig),
 	}
@@ -82,8 +83,8 @@ var (
 		EIP155Block:         big.NewInt(10),
 		EIP158Block:         big.NewInt(10),
 		ByzantiumBlock:      big.NewInt(1700000),
-		ConstantinopleBlock: big.NewInt(4230000),
-		PetersburgBlock:     big.NewInt(4939394),
+		DisposalBlock:       nil,
+		ConstantinopleBlock: nil,
 		Ethash:              new(EthashConfig),
 	}
 
@@ -107,8 +108,8 @@ var (
 		EIP155Block:         big.NewInt(3),
 		EIP158Block:         big.NewInt(3),
 		ByzantiumBlock:      big.NewInt(1035301),
-		ConstantinopleBlock: big.NewInt(3660663),
-		PetersburgBlock:     big.NewInt(4321234),
+		DisposalBlock:       nil,
+		ConstantinopleBlock: nil,
 		Clique: &CliqueConfig{
 			Period: 15,
 			Epoch:  30000,
@@ -156,16 +157,16 @@ var (
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, new(EthashConfig), nil}
+	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, new(EthashConfig), nil}
 
 	// AllCliqueProtocolChanges contains every protocol change (EIPs) introduced
 	// and accepted by the Ethereum core developers into the Clique consensus.
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, &CliqueConfig{Period: 0, Epoch: 30000}}
+	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, &CliqueConfig{Period: 0, Epoch: 30000}}
 
-	TestChainConfig = &ChainConfig{big.NewInt(1), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, new(EthashConfig), nil}
+	TestChainConfig = &ChainConfig{big.NewInt(1), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, new(EthashConfig), nil}
 	TestRules       = TestChainConfig.Rules(new(big.Int))
 )
 
@@ -200,6 +201,7 @@ type ChainConfig struct {
 
 	EIP155Block *big.Int `json:"eip155Block,omitempty"` // EIP155 HF block
 	EIP158Block *big.Int `json:"eip158Block,omitempty"` // EIP158 HF block
+	DisposalBlock *big.Int `json:"disposalBlock,omitempty"` // Bomb disposal HF block
 
 	ByzantiumBlock      *big.Int `json:"byzantiumBlock,omitempty"`      // Byzantium switch block (nil = no fork, 0 = already on byzantium)
 	ConstantinopleBlock *big.Int `json:"constantinopleBlock,omitempty"` // Constantinople switch block (nil = no fork, 0 = already activated)
@@ -241,8 +243,8 @@ func (c *ChainConfig) String() string {
 	default:
 		engine = "unknown"
 	}
-	return fmt.Sprintf("{ChainID: %v Homestead: %v DAO: %v DAOSupport: %v EIP150: %v EIP155: %v EIP158: %v Byzantium: %v Constantinople: %v  ConstantinopleFix: %v Engine: %v}",
-		c.ChainID,
+	return fmt.Sprintf("{ChainID: %v Homestead: %v DAO: %v DAOSupport: %v EIP150: %v EIP155: %v EIP158: %v Byzantium: %v, Disposal: %v, Constantinople: %v Engine: %v}",
+		c.ChainId,
 		c.HomesteadBlock,
 		c.DAOForkBlock,
 		c.DAOForkSupport,
@@ -250,6 +252,7 @@ func (c *ChainConfig) String() string {
 		c.EIP155Block,
 		c.EIP158Block,
 		c.ByzantiumBlock,
+		c.DisposalBlock,
 		c.ConstantinopleBlock,
 		c.PetersburgBlock,
 		engine,
@@ -291,16 +294,8 @@ func (c *ChainConfig) IsConstantinople(num *big.Int) bool {
 	return isForked(c.ConstantinopleBlock, num)
 }
 
-// IsPetersburg returns whether num is either
-// - equal to or greater than the PetersburgBlock fork block,
-// - OR is nil, and Constantinople is active
-func (c *ChainConfig) IsPetersburg(num *big.Int) bool {
-	return isForked(c.PetersburgBlock, num) || c.PetersburgBlock == nil && isForked(c.ConstantinopleBlock, num)
-}
-
-// IsEWASM returns whether num represents a block number after the EWASM fork
-func (c *ChainConfig) IsEWASM(num *big.Int) bool {
-	return isForked(c.EWASMBlock, num)
+func (c *ChainConfig) IsBombDisposal(num *big.Int) bool {
+	return isForked(c.DisposalBlock, num)
 }
 
 // GasTable returns the gas table corresponding to the current phase (homestead or homestead reprice).
