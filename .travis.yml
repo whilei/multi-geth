@@ -224,12 +224,3 @@ matrix:
         submodules: false # avoid cloning ethereum/tests
       script:
         - go run build/ci.go purge -store gethstore/builds -days 14
-
-    - name: Race Detector for Swarm
-      if: repo = ethersphere/go-ethereum
-      os: linux
-      dist: xenial
-      go: 1.12.x
-      git:
-        submodules: false # avoid cloning ethereum/tests
-      script: ./build/travis_keepalive.sh go test -timeout 20m -race ./swarm... ./p2p/{protocols,simulations,testing}/...
