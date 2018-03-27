@@ -130,6 +130,7 @@ var (
 		utils.DeveloperFlag,
 		utils.DeveloperPeriodFlag,
 		utils.TestnetFlag,
+		utils.EllaismFlag,
 		utils.RinkebyFlag,
 		utils.GoerliFlag,
 		utils.VMEnableDebugFlag,
