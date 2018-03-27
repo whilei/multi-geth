@@ -57,13 +57,19 @@ var (
 		Ethash:              new(EthashConfig),
 	}
 
-	// MainnetTrustedCheckpoint contains the light client trusted checkpoint for the main network.
-	MainnetTrustedCheckpoint = &TrustedCheckpoint{
-		Name:         "mainnet",
-		SectionIndex: 227,
-		SectionHead:  common.HexToHash("0xa2e0b25d72c2fc6e35a7f853cdacb193b4b4f95c606accf7f8fa8415283582c7"),
-		CHTRoot:      common.HexToHash("0xf69bdd4053b95b61a27b106a0e86103d791edd8574950dc96aa351ab9b9f1aa0"),
-		BloomRoot:    common.HexToHash("0xec1b454d4c6322c78ccedf76ac922a8698c3cac4d98748a84af4995b7bd3d744"),
+	// EllaismChainConfig is the chain parameters to run a node on the Ellaism main network.
+	EllaismChainConfig = &ChainConfig{
+		ChainId:             big.NewInt(64),
+		HomesteadBlock:      big.NewInt(0),
+		DAOForkBlock:        nil,
+		DAOForkSupport:      true,
+		EIP150Block:         big.NewInt(0),
+		EIP150Hash:          common.HexToHash("0x4d7df65052bb21264d6ad2d6fe2d5578a36be12f71bf8d0559b0c15c4dc539b5"),
+		EIP155Block:         big.NewInt(0),
+		EIP158Block:         big.NewInt(0x7fffffffffffffff),
+		ByzantiumBlock:      big.NewInt(0x7fffffffffffffff),
+		ConstantinopleBlock: nil,
+		Ethash:              new(EthashConfig),
 	}
 
 	// TestnetChainConfig contains the chain parameters to run a node on the Ropsten test network.
