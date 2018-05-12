@@ -1355,12 +1355,15 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *eth.Config) {
 	checkExclusive(ctx, FastSyncFlag, LightModeFlag, SyncModeFlag)
 	checkExclusive(ctx, LightServFlag, LightModeFlag)
 	checkExclusive(ctx, LightServFlag, SyncModeFlag, "light")
-	// Can't use both ephemeral unlocked and external signer
-	checkExclusive(ctx, DeveloperFlag, ExternalSignerFlag)
-	var ks *keystore.KeyStore
-	if keystores := stack.AccountManager().Backends(keystore.KeyStoreType); len(keystores) > 0 {
-		ks = keystores[0].(*keystore.KeyStore)
+
+	if ctx.GlobalIsSet(EllaismFlag.Name) {
+		log.Warn("-------------------------------------------------------------------")
+		log.Warn("multi-geth Ellaism support is deprecated, please upgrade to Parity")
+		log.Warn("(https://github.com/paritytech/parity) before block 2,000,000.")
+		log.Warn("-------------------------------------------------------------------")
 	}
+
+	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	setEtherbase(ctx, ks, cfg)
 	setGPO(ctx, &cfg.GPO)
 	setTxPool(ctx, &cfg.TxPool)
