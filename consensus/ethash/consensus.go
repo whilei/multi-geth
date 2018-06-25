@@ -38,14 +38,29 @@ import (
 
 // Ethash proof-of-work protocol constants.
 var (
-	FrontierBlockReward      *big.Int = big.NewInt(5e+18)                                   // Block reward in wei for successfully mining a block
-	ByzantiumBlockReward     *big.Int = big.NewInt(3e+18)                                   // Block reward in wei for successfully mining a block upward from Byzantium
-	SocialBlockReward        *big.Int = new(big.Int).Mul(big.NewInt(50), big.NewInt(1e+18)) // Block reward in wei for successfully mining a block upward for Ethereum Social
-	maxUncles                         = 2                                                   // Maximum number of uncles allowed in a single block
-	allowedFutureBlockTime            = 15 * time.Second                                    // Max time from current time allowed for blocks, before they're considered future blocks
-	DisinflationRateQuotient          = big.NewInt(4)                                       // Disinflation rate quotient for ECIP1017
-	DisinflationRateDivisor           = big.NewInt(5)                                       // Disinflation rate divisor for ECIP1017
-	ExpDiffPeriod                     = big.NewInt(100000)                                  // Exponential diff period for ECIP1010
+	FrontierBlockReward      = big.NewInt(5e+18)                                   // Block reward in wei for successfully mining a block
+	ByzantiumBlockReward     = big.NewInt(3e+18)                                   // Block reward in wei for successfully mining a block upward from Byzantium
+	ConstantinopleBlockReward = big.NewInt(2e+18)                                  // Block reward in wei for successfully mining a block upward from Constantinople
+	SocialBlockReward        = new(big.Int).Mul(big.NewInt(50), big.NewInt(1e+18)) // Block reward in wei for successfully mining a block upward for Ethereum Social
+	EthersocialBlockReward   = big.NewInt(5e+18)                                   // Block reward in wei for successfully mining a block upward for Ethersocial Network
+	maxUncles                = 2                                                   // Maximum number of uncles allowed in a single block
+	allowedFutureBlockTime   = 15 * time.Second                                    // Max time from current time allowed for blocks, before they're considered future blocks
+	DisinflationRateQuotient = big.NewInt(4)                                       // Disinflation rate quotient for ECIP1017
+	DisinflationRateDivisor  = big.NewInt(5)                                       // Disinflation rate divisor for ECIP1017
+	ExpDiffPeriod            = big.NewInt(100000)                                  // Exponential diff period for ECIP1010
+
+	// calcDifficultyConstantinople is the difficulty adjustment algorithm for Constantinople.
+	// It returns the difficulty that a new block should have when created at time given the
+	// parent block's time and difficulty. The calculation uses the Byzantium rules, but with
+	// bomb offset 5M.
+	// Specification EIP-1234: https://eips.ethereum.org/EIPS/eip-1234
+	calcDifficultyConstantinople = makeDifficultyCalculator(big.NewInt(5000000))
+
+	// calcDifficultyByzantium is the difficulty adjustment algorithm. It returns
+	// the difficulty that a new block should have when created at time given the
+	// parent block's time and difficulty. The calculation uses the Byzantium rules.
+	// Specification EIP-649: https://eips.ethereum.org/EIPS/eip-649
+	calcDifficultyByzantium = makeDifficultyCalculator(big.NewInt(3000000))
 )
 
 // Various error messages to mark blocks invalid. These should be private to
@@ -752,6 +767,9 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 	}
 	if config.IsSocial(header.Number) {
 		blockReward = SocialBlockReward
+	}
+	if config.IsEthersocial(header.Number) {
+		blockReward = EthersocialBlockReward
 	}
 	if config.HasECIP1017() {
 		// Ensure value 'era' is configured.
