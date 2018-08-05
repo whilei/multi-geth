@@ -37,7 +37,6 @@ matrix:
         - brew install caskroom/cask/brew-cask
         - brew cask install osxfuse
         - go run build/ci.go install
-        - travis_wait 60 go run build/ci.go test
       before_deploy:
         - sh build/deploy.sh
       deploy:
