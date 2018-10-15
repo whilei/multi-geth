@@ -133,6 +133,7 @@ var (
 		utils.EllaismFlag,
 		utils.ClassicFlag,
 		utils.SocialFlag,
+		utils.MixFlag,
 		utils.RinkebyFlag,
 		utils.GoerliFlag,
 		utils.VMEnableDebugFlag,

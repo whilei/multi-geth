@@ -148,6 +148,10 @@ var (
 		Name:  "social",
 		Usage: "Ethereum Social network: pre-configured Ethereum Social mainnet",
 	}
+	MixFlag = cli.BoolFlag{
+		Name:  "mix",
+		Usage: "MIX network: pre-configured MIX mainnet",
+	}
 	RinkebyFlag = cli.BoolFlag{
 		Name:  "rinkeby",
 		Usage: "Rinkeby network: pre-configured proof-of-authority test network",
@@ -738,6 +742,9 @@ func MakeDataDir(ctx *cli.Context) string {
 		if ctx.GlobalBool(SocialFlag.Name) {
 			return filepath.Join(path, "social")
 		}
+		if ctx.GlobalBool(MixFlag.Name) {
+			return filepath.Join(path, "mix")
+		}
 		if ctx.GlobalBool(RinkebyFlag.Name) {
 			return filepath.Join(path, "rinkeby")
 		}
@@ -802,6 +809,8 @@ func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 		urls = params.ClassicBootnodes
 	case ctx.GlobalBool(SocialFlag.Name):
 		urls = params.SocialBootnodes
+	case ctx.GlobalBool(MixFlag.Name):
+		urls = params.MixBootnodes
 	case ctx.GlobalBool(RinkebyFlag.Name):
 		urls = params.RinkebyBootnodes
 	case ctx.GlobalBool(GoerliFlag.Name):
@@ -858,8 +867,11 @@ func setBootstrapNodesV5(ctx *cli.Context, cfg *p2p.Config) {
 // setListenAddress creates a TCP listening address string from set command
 // line flags.
 func setListenAddress(ctx *cli.Context, cfg *p2p.Config) {
-	if ctx.GlobalIsSet(ListenPortFlag.Name) {
+	switch {
+	case ctx.GlobalIsSet(ListenPortFlag.Name):
 		cfg.ListenAddr = fmt.Sprintf(":%d", ctx.GlobalInt(ListenPortFlag.Name))
+	case ctx.GlobalBool(MixFlag.Name):
+		cfg.ListenAddr = ":30313"
 	}
 }
 
@@ -894,8 +906,11 @@ func setHTTP(ctx *cli.Context, cfg *node.Config) {
 		}
 	}
 
-	if ctx.GlobalIsSet(RPCPortFlag.Name) {
+	switch {
+	case ctx.GlobalIsSet(RPCPortFlag.Name):
 		cfg.HTTPPort = ctx.GlobalInt(RPCPortFlag.Name)
+	case ctx.GlobalBool(MixFlag.Name):
+		cfg.HTTPPort = 8645
 	}
 	if ctx.GlobalIsSet(RPCCORSDomainFlag.Name) {
 		cfg.HTTPCors = splitAndTrim(ctx.GlobalString(RPCCORSDomainFlag.Name))
@@ -936,8 +951,11 @@ func setWS(ctx *cli.Context, cfg *node.Config) {
 		}
 	}
 
-	if ctx.GlobalIsSet(WSPortFlag.Name) {
+	switch {
+	case ctx.GlobalIsSet(WSPortFlag.Name):
 		cfg.WSPort = ctx.GlobalInt(WSPortFlag.Name)
+	case ctx.GlobalBool(MixFlag.Name):
+		cfg.WSPort = 8646
 	}
 	if ctx.GlobalIsSet(WSAllowedOriginsFlag.Name) {
 		cfg.WSOrigins = splitAndTrim(ctx.GlobalString(WSAllowedOriginsFlag.Name))
@@ -1165,6 +1183,8 @@ func SetNodeConfig(ctx *cli.Context, cfg *node.Config) {
 		cfg.DataDir = filepath.Join(node.DefaultDataDir(), "classic")
 	case ctx.GlobalBool(SocialFlag.Name):
 		cfg.DataDir = filepath.Join(node.DefaultDataDir(), "social")
+	case ctx.GlobalBool(MixFlag.Name):
+		cfg.DataDir = filepath.Join(node.DefaultDataDir(), "mix")
 	case ctx.GlobalBool(RinkebyFlag.Name):
 		cfg.DataDir = filepath.Join(node.DefaultDataDir(), "rinkeby")
 	}
@@ -1351,9 +1371,7 @@ func SetShhConfig(ctx *cli.Context, stack *node.Node, cfg *whisper.Config) {
 // SetEthConfig applies eth-related command line flags to the config.
 func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *eth.Config) {
 	// Avoid conflicting network flags
-	checkExclusive(ctx, DeveloperFlag, TestnetFlag, RinkebyFlag, EllaismFlag, ClassicFlag, SocialFlag)
-	checkExclusive(ctx, FastSyncFlag, LightModeFlag, SyncModeFlag)
-	checkExclusive(ctx, LightServFlag, LightModeFlag)
+	checkExclusive(ctx, DeveloperFlag, TestnetFlag, RinkebyFlag, EllaismFlag, ClassicFlag, SocialFlag, MixFlag)
 	checkExclusive(ctx, LightServFlag, SyncModeFlag, "light")
 
 	if ctx.GlobalIsSet(EllaismFlag.Name) {
@@ -1480,11 +1498,11 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *eth.Config) {
 			cfg.NetworkId = 4
 		}
 		cfg.Genesis = core.DefaultRinkebyGenesisBlock()
-	case ctx.GlobalBool(GoerliFlag.Name):
+	case ctx.GlobalBool(MixFlag.Name):
 		if !ctx.GlobalIsSet(NetworkIdFlag.Name) {
-			cfg.NetworkId = 5
+			cfg.NetworkId = 76
 		}
-		cfg.Genesis = core.DefaultGoerliGenesisBlock()
+		cfg.Genesis = core.DefaultMixGenesisBlock()
 	case ctx.GlobalBool(DeveloperFlag.Name):
 		if !ctx.GlobalIsSet(NetworkIdFlag.Name) {
 			cfg.NetworkId = 1337
@@ -1642,6 +1660,8 @@ func MakeGenesis(ctx *cli.Context) *core.Genesis {
 		genesis = core.DefaultClassicGenesisBlock()
 	case ctx.GlobalBool(SocialFlag.Name):
 		genesis = core.DefaultSocialGenesisBlock()
+	case ctx.GlobalBool(MixFlag.Name):
+		genesis = core.DefaultMixGenesisBlock()
 	case ctx.GlobalBool(RinkebyFlag.Name):
 		genesis = core.DefaultRinkebyGenesisBlock()
 	case ctx.GlobalBool(GoerliFlag.Name):
