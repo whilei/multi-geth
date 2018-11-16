@@ -407,15 +407,15 @@ func DefaultRinkebyGenesisBlock() *Genesis {
 	}
 }
 
-// DefaultKottiGenesisBlock returns the Kotti network genesis block.
-func DefaultKottiGenesisBlock() *Genesis {
+// DefaultGoerliGenesisBlock returns the Görli network genesis block.
+func DefaultGoerliGenesisBlock() *Genesis {
 	return &Genesis{
-		Config:     params.KottiChainConfig,
-		Timestamp:  1546461831,
-		ExtraData:  hexutil.MustDecode("0x000000000000000000000000000000000000000000000000000000000000000025b7955e43adf9c2a01a9475908702cce67f302a6aaf8cba3c9255a2b863415d4db7bae4f4bbca020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
+		Config:     params.GoerliChainConfig,
+		Timestamp:  1548854791,
+		ExtraData:  hexutil.MustDecode("0x22466c6578692069732061207468696e6722202d204166726900000000000000e0a2bd4258d2768837baa26a28fe71dc079f84c70000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
 		GasLimit:   10485760,
 		Difficulty: big.NewInt(1),
-		Alloc:      decodePrealloc(kottiAllocData),
+		Alloc:      decodePrealloc(goerliAllocData),
 	}
 }
 
