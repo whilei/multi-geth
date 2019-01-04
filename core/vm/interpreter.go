@@ -82,16 +82,7 @@ func NewEVMInterpreter(evm *EVM, cfg Config) *EVMInterpreter {
 	// the jump table was initialised. If it was not
 	// we'll set the default jump table.
 	if !cfg.JumpTable[STOP].valid {
-		switch {
-		case evm.ChainConfig().IsConstantinople(evm.BlockNumber):
-			cfg.JumpTable = constantinopleInstructionSet
-		case evm.ChainConfig().IsByzantium(evm.BlockNumber):
-			cfg.JumpTable = byzantiumInstructionSet
-		case evm.ChainConfig().IsHomestead(evm.BlockNumber):
-			cfg.JumpTable = homesteadInstructionSet
-		default:
-			cfg.JumpTable = frontierInstructionSet
-		}
+		cfg.JumpTable = baseInstructionSet
 	}
 
 	return &EVMInterpreter{
@@ -99,6 +90,53 @@ func NewEVMInterpreter(evm *EVM, cfg Config) *EVMInterpreter {
 		cfg:      cfg,
 		gasTable: evm.ChainConfig().GasTable(evm.BlockNumber),
 	}
+}
+
+func (in *EVMInterpreter) enforceRestrictions(op OpCode, operation operation, stack *Stack) error {
+	// STATICCALL
+	if in.evm.chainRules.IsEIP214F {
+		if in.readOnly {
+			// If the interpreter is operating in readonly mode, make sure no
+			// state-modifying operation is performed. The 3rd stack item
+			// for a call operation is the value. Transferring value from one
+			// account to the others means the state is modified and should also
+			// return with an error.
+			if operation.writes || (op == CALL && stack.Back(2).BitLen() > 0) {
+				return errWriteProtection
+			}
+		}
+	}
+	switch op {
+	case DELEGATECALL:
+		if !in.evm.chainRules.IsEIP7F {
+			return fmt.Errorf("invalid opcode 0x%x", int(op))
+		}
+	case REVERT:
+		if !in.evm.chainRules.IsEIP140F {
+			return fmt.Errorf("invalid opcode 0x%x", int(op))
+		}
+	case STATICCALL:
+		if !in.evm.chainRules.IsEIP214F {
+			return fmt.Errorf("invalid opcode 0x%x", int(op))
+		}
+	case RETURNDATACOPY, RETURNDATASIZE:
+		if !in.evm.chainRules.IsEIP211F {
+			return fmt.Errorf("invalid opcode 0x%x", int(op))
+		}
+	case SHL, SHR, SAR:
+		if !in.evm.chainRules.IsEIP145F {
+			return fmt.Errorf("invalid opcode 0x%x", int(op))
+		}
+	case CREATE2:
+		if !in.evm.chainRules.IsEIP1014F {
+			return fmt.Errorf("invalid opcode 0x%x", int(op))
+		}
+	case EXTCODEHASH:
+		if !in.evm.chainRules.IsEIP1052F {
+			return fmt.Errorf("invalid opcode 0x%x", int(op))
+		}
+	}
+	return nil
 }
 
 // Run loops and evaluates the contract's code with the given input data and returns
@@ -184,12 +222,6 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		if !operation.valid {
 			return nil, fmt.Errorf("invalid opcode 0x%x", int(op))
 		}
-		// Validate stack
-		if sLen := stack.len(); sLen < operation.minStack {
-			return nil, fmt.Errorf("stack underflow (%d <=> %d)", sLen, operation.minStack)
-		} else if sLen > operation.maxStack {
-			return nil, fmt.Errorf("stack limit reached %d (%d)", sLen, operation.maxStack)
-		}
 		// If the operation is valid, enforce and write restrictions
 		if in.readOnly && in.evm.chainRules.IsByzantium {
 			// If the interpreter is operating in readonly mode, make sure no
@@ -204,6 +236,9 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		// Static portion of gas
 		if !contract.UseGas(operation.constantGas) {
 			return nil, ErrOutOfGas
+		}
+		if err := operation.validateStack(stack); err != nil {
+			return nil, err
 		}
 
 		var memorySize uint64
