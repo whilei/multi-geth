@@ -51,7 +51,7 @@ func (m *mockNetFetcher) Offer(source *enode.ID) {
 	m.sources = append(m.sources, source)
 }
 
-func (m *mockNetFetcher) Request(hopCount uint8) {
+func (m *mockNetFetcher) Request(ctx context.Context, hopCount uint8) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
