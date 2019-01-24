@@ -56,72 +56,8 @@ var (
 		EIP155Block:         big.NewInt(2675000),
 		EIP158Block:         big.NewInt(2675000),
 		ByzantiumBlock:      big.NewInt(4370000),
-		DisposalBlock:       nil,
-		SocialBlock:         nil,
-		EthersocialBlock:    nil,
-		ConstantinopleBlock: nil,
-		Ethash:              new(EthashConfig),
-	}
-
-	// EllaismChainConfig is the chain parameters to run a node on the Ellaism main network.
-	EllaismChainConfig = &ChainConfig{
-		ChainID:             big.NewInt(64),
-		HomesteadBlock:      big.NewInt(0),
-		DAOForkBlock:        nil,
-		DAOForkSupport:      true,
-		EIP150Block:         big.NewInt(0),
-		EIP150Hash:          common.HexToHash("0x4d7df65052bb21264d6ad2d6fe2d5578a36be12f71bf8d0559b0c15c4dc539b5"),
-		EIP155Block:         big.NewInt(0),
-		EIP158Block:         nil,
-		ByzantiumBlock:      nil,
-		DisposalBlock:       big.NewInt(0),
-		SocialBlock:         nil,
-		EthersocialBlock:    nil,
-		ConstantinopleBlock: nil,
-		ECIP1017EraRounds:   big.NewInt(10000000),
-		EIP160FBlock:        big.NewInt(0),
-		Ethash:              new(EthashConfig),
-	}
-
-	// ClassicChainConfig is the chain parameters to run a node on the Ellaism main network.
-	ClassicChainConfig = &ChainConfig{
-		ChainID:             big.NewInt(61),
-		HomesteadBlock:      big.NewInt(1150000),
-		DAOForkBlock:        big.NewInt(1920000),
-		DAOForkSupport:      false,
-		EIP150Block:         big.NewInt(2500000),
-		EIP150Hash:          common.HexToHash("0xca12c63534f565899681965528d536c52cb05b7c48e269c2a6cb77ad864d878a"),
-		EIP155Block:         big.NewInt(3000000),
-		EIP158Block:         nil,
-		ByzantiumBlock:      nil,
-		DisposalBlock:       big.NewInt(5900000),
-		SocialBlock:         nil,
-		EthersocialBlock:    nil,
-		ConstantinopleBlock: nil,
-		ECIP1017EraRounds:   big.NewInt(5000000),
-		EIP160FBlock:        big.NewInt(3000000),
-		ECIP1010PauseBlock:  big.NewInt(3000000),
-		ECIP1010Length:      big.NewInt(2000000),
-		Ethash:              new(EthashConfig),
-	}
-
-	// SocialChainConfig is the chain parameters to run a node on the Ethereum Social main network.
-	SocialChainConfig = &ChainConfig{
-		ChainID:             big.NewInt(28),
-		HomesteadBlock:      big.NewInt(0),
-		DAOForkBlock:        nil,
-		DAOForkSupport:      true,
-		EIP150Block:         big.NewInt(0),
-		EIP150Hash:          common.HexToHash("0xba8314d5c2ebddaf58eb882b364b27cbfa4d3402dacd32b60986754ac25cfe8d"),
-		EIP155Block:         big.NewInt(0),
-		EIP158Block:         nil,
-		ByzantiumBlock:      nil,
-		DisposalBlock:       big.NewInt(0),
-		SocialBlock:         big.NewInt(0),
-		EthersocialBlock:    nil,
-		ConstantinopleBlock: nil,
-		ECIP1017EraRounds:   big.NewInt(5000000),
-		EIP160FBlock:        big.NewInt(0),
+		ConstantinopleBlock: big.NewInt(7280000),
+		PetersburgBlock:     big.NewInt(7280000),
 		Ethash:              new(EthashConfig),
 	}
 
@@ -185,6 +121,7 @@ var (
 		SocialBlock:         nil,
 		EthersocialBlock:    nil,
 		ConstantinopleBlock: big.NewInt(4230000),
+		PetersburgBlock:     big.NewInt(4939394),
 		Ethash:              new(EthashConfig),
 	}
 
@@ -208,10 +145,8 @@ var (
 		EIP155Block:         big.NewInt(3),
 		EIP158Block:         big.NewInt(3),
 		ByzantiumBlock:      big.NewInt(1035301),
-		DisposalBlock:       nil,
-		SocialBlock:         nil,
-		EthersocialBlock:    nil,
-		ConstantinopleBlock: nil,
+		ConstantinopleBlock: big.NewInt(3660663),
+		PetersburgBlock:     big.NewInt(9999999), //TODO! Insert Rinkeby block number
 		Clique: &CliqueConfig{
 			Period: 15,
 			Epoch:  30000,
@@ -284,164 +219,17 @@ var (
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllEthashProtocolChanges = &ChainConfig{
-		big.NewInt(1337), // ChainID
-
-		big.NewInt(0), // HomesteadBlock
-		nil,           // EIP2FBlock
-		nil,           // EIP7FBlock
-
-		nil,   // DAOForkBlock
-		false, // DAOForkSupport
-
-		big.NewInt(0), // EIP150Block
-		common.Hash{}, // EIP150Hash
-		big.NewInt(0), // EIP155Block
-		big.NewInt(0), // EIP158Block
-		nil,           // EIP160FBlock
-		nil,           // EIP161FBlock
-		nil,           // EIP170FBlock
-
-		big.NewInt(0), // ByzantiumBlock
-		nil,           // EIP100FBlock
-		nil,           // EIP140FBlock
-		nil,           // EIP198FBlock
-		nil,           // EIP211FBlock
-		nil,           // EIP212FBlock
-		nil,           // EIP213FBlock
-		nil,           // EIP214FBlock
-		nil,           // EIP649FBlock
-		nil,           // EIP658FBlock
-
-		big.NewInt(0), // ConstantinopleBlock
-		nil,           // EIP145FBlock
-		nil,           // EIP1014FBlock
-		nil,           // EIP1052FBlock
-		nil,           // EIP1234FBlock
-		nil,           // EIP1283FBlock
-
-		nil, // EWASMBlock
-
-		nil, // ECIP1010PauseBlock
-		nil, // ECIP1010Length
-		nil, // ECIP1017EraRounds
-		nil, // DisposalBlock
-		nil, // SocialBlock
-		nil, // EthersocialBlock
-
-		new(EthashConfig), // Ethash
-		nil,               // Clique
-	}
+	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, new(EthashConfig), nil}
 
 	// AllCliqueProtocolChanges contains every protocol change (EIPs) introduced
 	// and accepted by the Ethereum core developers into the Clique consensus.
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllCliqueProtocolChanges = &ChainConfig{
-		big.NewInt(1337), // ChainID
+	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, &CliqueConfig{Period: 0, Epoch: 30000}}
 
-		big.NewInt(0), // HomesteadBlock
-		nil,           // EIP2FBlock
-		nil,           // EIP7FBlock
-
-		nil,   // DAOForkBlock
-		false, // DAOForkSupport
-
-		big.NewInt(0), // EIP150Block
-		common.Hash{}, // EIP150Hash
-		big.NewInt(0), // EIP155Block
-		big.NewInt(0), // EIP158Block
-		nil,           // EIP160FBlock
-		nil,           // EIP161FBlock
-		nil,           // EIP170FBlock
-
-		big.NewInt(0), // ByzantiumBlock
-		nil,           // EIP100FBlock
-		nil,           // EIP140FBlock
-		nil,           // EIP198FBlock
-		nil,           // EIP211FBlock
-		nil,           // EIP212FBlock
-		nil,           // EIP213FBlock
-		nil,           // EIP214FBlock
-		nil,           // EIP649FBlock
-		nil,           // EIP658FBlock
-
-		big.NewInt(0), // ConstantinopleBlock
-		nil,           // EIP145FBlock
-		nil,           // EIP1014FBlock
-		nil,           // EIP1052FBlock
-		nil,           // EIP1234FBlock
-		nil,           // EIP1283FBlock
-
-		nil, // EWASMBlock
-
-		nil, // ECIP1010PauseBlock
-		nil, // ECIP1010Length
-		nil, // ECIP1017EraRounds
-		nil, // DisposalBlock
-		nil, // SocialBlock
-		nil, // EthersocialBlock
-
-		nil, // Ethash
-		&CliqueConfig{
-			Period: 0,
-			Epoch:  30000,
-		},
-	}
-
-	// TestChainConfig is used for tests.
-	TestChainConfig = &ChainConfig{
-		big.NewInt(1), // ChainID
-
-		big.NewInt(0), // HomesteadBlock
-		nil,           // EIP2FBlock
-		nil,           // EIP7FBlock
-
-		nil,   // DAOForkBlock
-		false, // DAOForkSupport
-
-		big.NewInt(0), // EIP150Block
-		common.Hash{}, // EIP150Hash
-		big.NewInt(0), // EIP155Block
-		big.NewInt(0), // EIP158Block
-		nil,           // EIP160FBlock
-		nil,           // EIP161FBlock
-		nil,           // EIP170FBlock
-
-		big.NewInt(0), // ByzantiumBlock
-		nil,           // EIP100FBlock
-		nil,           // EIP140FBlock
-		nil,           // EIP198FBlock
-		nil,           // EIP211FBlock
-		nil,           // EIP212FBlock
-		nil,           // EIP213FBlock
-		nil,           // EIP214FBlock
-		nil,           // EIP649FBlock
-		nil,           // EIP658FBlock
-
-		big.NewInt(0), // ConstantinopleBlock
-		nil,           // EIP145FBlock
-		nil,           // EIP1014FBlock
-		nil,           // EIP1052FBlock
-		nil,           // EIP1234FBlock
-		nil,           // EIP1283FBlock
-
-		nil, // EWASMBlock
-
-		nil, // ECIP1010PauseBlock
-		nil, // ECIP1010Length
-		nil, // ECIP1017EraRounds
-		nil, // DisposalBlock
-		nil, // SocialBlock
-		nil, // EthersocialBlock
-
-		new(EthashConfig), // Ethash
-		nil,               // Clique
-	}
-
-	// TestRules are all rules from TestChainConfig initialized at 0.
-	TestRules = TestChainConfig.Rules(new(big.Int))
+	TestChainConfig = &ChainConfig{big.NewInt(1), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, new(EthashConfig), nil}
+	TestRules       = TestChainConfig.Rules(new(big.Int))
 )
 
 // TrustedCheckpoint represents a set of post-processed trie roots (CHT and
@@ -539,31 +327,8 @@ type ChainConfig struct {
 
 	// HF: Constantinople
 	ConstantinopleBlock *big.Int `json:"constantinopleBlock,omitempty"` // Constantinople switch block (nil = no fork, 0 = already activated)
-	//
-	// Opcodes SHR, SHL, SAR
-	// https://eips.ethereum.org/EIPS/eip-145
-	EIP145FBlock *big.Int `json:"eip145FBlock,omitempty"`
-	// Opcode CREATE2
-	// https://eips.ethereum.org/EIPS/eip-1014
-	EIP1014FBlock *big.Int `json:"eip1014FBlock,omitempty"`
-	// Opcode EXTCODEHASH
-	// https://eips.ethereum.org/EIPS/eip-1052
-	EIP1052FBlock *big.Int `json:"eip1052FBlock,omitempty"`
-	// Constantinople difficulty bomb delay and block reward adjustment
-	// https://eips.ethereum.org/EIPS/eip-1234
-	EIP1234FBlock *big.Int `json:"eip1234FBlock,omitempty"`
-	// Net gas metering
-	// https://eips.ethereum.org/EIPS/eip-1283
-	EIP1283FBlock *big.Int `json:"eip1283FBlock,omitempty"`
-
-	EWASMBlock *big.Int `json:"ewasmBlock,omitempty"` // EWASM switch block (nil = no fork, 0 = already activated)
-
-	ECIP1010PauseBlock *big.Int `json:"ecip1010PauseBlock,omitempty"` // ECIP1010 pause HF block
-	ECIP1010Length     *big.Int `json:"ecip1010Length,omitempty"`     // ECIP1010 length
-	ECIP1017EraRounds  *big.Int `json:"ecip1017EraRounds,omitempty"`  // ECIP1017 era rounds
-	DisposalBlock      *big.Int `json:"disposalBlock,omitempty"`      // Bomb disposal HF block
-	SocialBlock        *big.Int `json:"socialBlock,omitempty"`        // Ethereum Social Reward block
-	EthersocialBlock   *big.Int `json:"ethersocialBlock,omitempty"`   // Ethersocial Reward block
+	PetersburgBlock     *big.Int `json:"petersburgBlock,omitempty"`     // Petersburg switch block (nil = same as Constantinople)
+	EWASMBlock          *big.Int `json:"ewasmBlock,omitempty"`          // EWASM switch block (nil = no fork, 0 = already activated)
 
 	// Various consensus engines
 	Ethash *EthashConfig `json:"ethash,omitempty"`
@@ -600,7 +365,7 @@ func (c *ChainConfig) String() string {
 	default:
 		engine = "unknown"
 	}
-	return fmt.Sprintf("{ChainID: %v Homestead: %v DAO: %v DAOSupport: %v EIP150: %v EIP155: %v EIP158: %v Byzantium: %v Disposal: %v Social: %v Ethersocial: %v ECIP1017: %v EIP160: %v ECIP1010PauseBlock: %v ECIP1010Length: %v Constantinople: %v Engine: %v}",
+	return fmt.Sprintf("{ChainID: %v Homestead: %v DAO: %v DAOSupport: %v EIP150: %v EIP155: %v EIP158: %v Byzantium: %v Constantinople: %v  ConstantinopleFix: %v Engine: %v}",
 		c.ChainID,
 		c.HomesteadBlock,
 		c.DAOForkBlock,
@@ -840,6 +605,13 @@ func (c *ChainConfig) IsECIP1010(num *big.Int) bool {
 	return isForked(c.ECIP1010PauseBlock, num)
 }
 
+// IsPetersburg returns whether num is either
+// - equal to or greater than the PetersburgBlock fork block,
+// - OR is nil, and Constantinople is active
+func (c *ChainConfig) IsPetersburg(num *big.Int) bool {
+	return isForked(c.PetersburgBlock, num) || c.PetersburgBlock == nil && isForked(c.ConstantinopleBlock, num)
+}
+
 // IsEWASM returns whether num represents a block number after the EWASM fork
 func (c *ChainConfig) IsEWASM(num *big.Int) bool {
 	return isForked(c.EWASMBlock, num)
@@ -930,17 +702,14 @@ func (c *ChainConfig) checkCompatible(newcfg *ChainConfig, head *big.Int) *Confi
 	if c.IsEIP155(head) && !configNumEqual(c.ChainID, newcfg.ChainID) {
 		return newCompatError("EIP155 chain ID", c.EIP155Block, newcfg.EIP155Block)
 	}
-	// Either Byzantium block must be set OR EIP100 and EIP649 must be equivalent
-	if newcfg.ByzantiumBlock == nil {
-		if !configNumEqual(newcfg.EIP100FBlock, newcfg.EIP649FBlock) {
-			return newCompatError("EIP100F/EIP649F not equal", newcfg.EIP100FBlock, newcfg.EIP649FBlock)
-		}
-		if isForkIncompatible(c.EIP100FBlock, newcfg.EIP649FBlock, head) {
-			return newCompatError("EIP100F/EIP649F fork block", c.EIP100FBlock, newcfg.EIP649FBlock)
-		}
-		if isForkIncompatible(c.EIP649FBlock, newcfg.EIP100FBlock, head) {
-			return newCompatError("EIP649F/EIP100F fork block", c.EIP649FBlock, newcfg.EIP100FBlock)
-		}
+	if isForkIncompatible(c.ConstantinopleBlock, newcfg.ConstantinopleBlock, head) {
+		return newCompatError("Constantinople fork block", c.ConstantinopleBlock, newcfg.ConstantinopleBlock)
+	}
+	if isForkIncompatible(c.PetersburgBlock, newcfg.PetersburgBlock, head) {
+		return newCompatError("ConstantinopleFix fork block", c.PetersburgBlock, newcfg.PetersburgBlock)
+	}
+	if isForkIncompatible(c.EWASMBlock, newcfg.EWASMBlock, head) {
+		return newCompatError("ewasm fork block", c.EWASMBlock, newcfg.EWASMBlock)
 	}
 
 	return nil
@@ -1007,14 +776,9 @@ func (err *ConfigCompatError) Error() string {
 // Rules is a one time interface meaning that it shouldn't be used in between transition
 // phases.
 type Rules struct {
-	ChainID                                                                                                        *big.Int
-	IsHomestead, IsEIP2F, IsEIP7F                                                                                  bool
-	IsEIP150                                                                                                       bool
-	IsEIP155                                                                                                       bool
-	IsEIP158HF, IsEIP160F, IsEIP161F, IsEIP170F                                                                    bool
-	IsByzantium, IsEIP100F, IsEIP140F, IsEIP198F, IsEIP211F, IsEIP212F, IsEIP213F, IsEIP214F, IsEIP649F, IsEIP658F bool
-	IsConstantinople, IsEIP145F, IsEIP1014F, IsEIP1052F, IsEIP1283F, IsEIP1234F                                    bool
-	IsBombDisposal, IsSocial, IsEthersocial, IsECIP1010                                                            bool
+	ChainID                                     *big.Int
+	IsHomestead, IsEIP150, IsEIP155, IsEIP158   bool
+	IsByzantium, IsConstantinople, IsPetersburg bool
 }
 
 // Rules ensures c's ChainID is not nil.
@@ -1049,15 +813,6 @@ func (c *ChainConfig) Rules(num *big.Int) Rules {
 		IsEIP658F:   c.IsEIP658F(num),
 
 		IsConstantinople: c.IsConstantinople(num),
-		IsEIP145F:        c.IsEIP145F(num),
-		IsEIP1014F:       c.IsEIP1014F(num),
-		IsEIP1052F:       c.IsEIP1052F(num),
-		IsEIP1234F:       c.IsEIP1234F(num),
-		IsEIP1283F:       c.IsEIP1283F(num),
-
-		IsBombDisposal: c.IsBombDisposal(num),
-		IsSocial:       c.IsSocial(num),
-		IsEthersocial:  c.IsEthersocial(num),
-		IsECIP1010:     c.IsECIP1010(num),
+		IsPetersburg:     c.IsPetersburg(num),
 	}
 }
