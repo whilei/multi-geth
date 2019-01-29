@@ -126,6 +126,31 @@ var (
 		BloomRoot:    common.HexToHash("0xcf74ca2c14e843b366561dab4fc64237bf6bb335119cbc97d723f3b501863470"),
 	}
 
+	// KottiChainConfig is the chain parameters to run a node on the Ellaism main network.
+	KottiChainConfig = &ChainConfig{
+		ChainID:             big.NewInt(6),
+		HomesteadBlock:      big.NewInt(0),
+		DAOForkBlock:        nil,
+		DAOForkSupport:      false,
+		EIP150Block:         big.NewInt(0),
+		EIP150Hash:          common.HexToHash("0x14c2283285a88fe5fce9bf5c573ab03d6616695d717b12a127188bcacfc743c4"),
+		EIP155Block:         big.NewInt(0),
+		EIP158Block:         nil,
+		ByzantiumBlock:      nil,
+		DisposalBlock:       big.NewInt(0),
+		SocialBlock:         nil,
+		EthersocialBlock:    nil,
+		ConstantinopleBlock: nil,
+		ECIP1017EraRounds:   big.NewInt(5000000),
+		EIP160FBlock:        big.NewInt(0),
+		ECIP1010PauseBlock:  big.NewInt(0),
+		ECIP1010Length:      big.NewInt(2000000),
+		Clique: &CliqueConfig{
+			Period: 15,
+			Epoch:  30000,
+		},
+	}
+
 	// AllEthashProtocolChanges contains every protocol change (EIPs) introduced
 	// and accepted by the Ethereum core developers into the Ethash consensus.
 	//
@@ -239,8 +264,33 @@ type ChainConfig struct {
 
 	// HF: Constantinople
 	ConstantinopleBlock *big.Int `json:"constantinopleBlock,omitempty"` // Constantinople switch block (nil = no fork, 0 = already activated)
-	PetersburgBlock     *big.Int `json:"petersburgBlock,omitempty"`     // Petersburg switch block (nil = same as Constantinople)
-	EWASMBlock          *big.Int `json:"ewasmBlock,omitempty"`          // EWASM switch block (nil = no fork, 0 = already activated)
+	//
+	// Opcodes SHR, SHL, SAR
+	// https://eips.ethereum.org/EIPS/eip-145
+	EIP145FBlock *big.Int `json:"eip145FBlock,omitempty"`
+	// Opcode CREATE2
+	// https://eips.ethereum.org/EIPS/eip-1014
+	EIP1014FBlock *big.Int `json:"eip1014FBlock,omitempty"`
+	// Opcode EXTCODEHASH
+	// https://eips.ethereum.org/EIPS/eip-1052
+	EIP1052FBlock *big.Int `json:"eip1052FBlock,omitempty"`
+	// Constantinople difficulty bomb delay and block reward adjustment
+	// https://eips.ethereum.org/EIPS/eip-1234
+	EIP1234FBlock *big.Int `json:"eip1234FBlock,omitempty"`
+	// Net gas metering
+	// https://eips.ethereum.org/EIPS/eip-1283
+	EIP1283FBlock *big.Int `json:"eip1283FBlock,omitempty"`
+
+	PetersburgBlock *big.Int `json:"petersburgBlock,omitempty"` // Petersburg switch block (nil = same as Constantinople)
+
+	EWASMBlock *big.Int `json:"ewasmBlock,omitempty"` // EWASM switch block (nil = no fork, 0 = already activated)
+
+	ECIP1010PauseBlock *big.Int `json:"ecip1010PauseBlock,omitempty"` // ECIP1010 pause HF block
+	ECIP1010Length     *big.Int `json:"ecip1010Length,omitempty"`     // ECIP1010 length
+	ECIP1017EraRounds  *big.Int `json:"ecip1017EraRounds,omitempty"`  // ECIP1017 era rounds
+	DisposalBlock      *big.Int `json:"disposalBlock,omitempty"`      // Bomb disposal HF block
+	SocialBlock        *big.Int `json:"socialBlock,omitempty"`        // Ethereum Social Reward block
+	EthersocialBlock   *big.Int `json:"ethersocialBlock,omitempty"`   // Ethersocial Reward block
 
 	// Various consensus engines
 	Ethash *EthashConfig `json:"ethash,omitempty"`
@@ -498,7 +548,11 @@ func (c *ChainConfig) IsEIP1234F(num *big.Int) bool {
 
 // IsEIP1283F returns whether num is equal to or greater than the Constantinople or EIP1283 block.
 func (c *ChainConfig) IsEIP1283F(num *big.Int) bool {
-	return c.IsConstantinople(num) || isForked(c.EIP1283FBlock, num)
+	if c.IsPetersburg(num) {
+		return false
+	} else {
+		return c.IsConstantinople(num) || isForked(c.EIP1283FBlock, num)
+	}
 }
 
 func (c *ChainConfig) IsBombDisposal(num *big.Int) bool {
@@ -688,9 +742,15 @@ func (err *ConfigCompatError) Error() string {
 // Rules is a one time interface meaning that it shouldn't be used in between transition
 // phases.
 type Rules struct {
-	ChainID                                     *big.Int
-	IsHomestead, IsEIP150, IsEIP155, IsEIP158   bool
-	IsByzantium, IsConstantinople, IsPetersburg bool
+	ChainID                                                                                                        *big.Int
+	IsHomestead, IsEIP2F, IsEIP7F                                                                                  bool
+	IsEIP150                                                                                                       bool
+	IsEIP155                                                                                                       bool
+	IsEIP158HF, IsEIP160F, IsEIP161F, IsEIP170F                                                                    bool
+	IsByzantium, IsEIP100F, IsEIP140F, IsEIP198F, IsEIP211F, IsEIP212F, IsEIP213F, IsEIP214F, IsEIP649F, IsEIP658F bool
+	IsConstantinople, IsEIP145F, IsEIP1014F, IsEIP1052F, IsEIP1283F, IsEIP1234F                                    bool
+	IsPetersburg                                                                                                   bool
+	IsBombDisposal, IsSocial, IsEthersocial, IsECIP1010                                                            bool
 }
 
 // Rules ensures c's ChainID is not nil.
@@ -725,6 +785,17 @@ func (c *ChainConfig) Rules(num *big.Int) Rules {
 		IsEIP658F:   c.IsEIP658F(num),
 
 		IsConstantinople: c.IsConstantinople(num),
-		IsPetersburg:     c.IsPetersburg(num),
+		IsEIP145F:        c.IsEIP145F(num),
+		IsEIP1014F:       c.IsEIP1014F(num),
+		IsEIP1052F:       c.IsEIP1052F(num),
+		IsEIP1234F:       c.IsEIP1234F(num),
+		IsEIP1283F:       c.IsEIP1283F(num),
+
+		IsPetersburg: c.IsPetersburg(num),
+
+		IsBombDisposal: c.IsBombDisposal(num),
+		IsSocial:       c.IsSocial(num),
+		IsEthersocial:  c.IsEthersocial(num),
+		IsECIP1010:     c.IsECIP1010(num),
 	}
 }
