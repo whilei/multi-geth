@@ -82,7 +82,7 @@ func NewEVMInterpreter(evm *EVM, cfg Config) *EVMInterpreter {
 	// the jump table was initialised. If it was not
 	// we'll set the default jump table.
 	if !cfg.JumpTable[STOP].valid {
-		cfg.JumpTable = baseInstructionSet
+		cfg.JumpTable = instructionSetForConfig(evm.ChainConfig(), evm.BlockNumber)
 	}
 
 	return &EVMInterpreter{
@@ -104,36 +104,6 @@ func (in *EVMInterpreter) enforceRestrictions(op OpCode, operation operation, st
 			if operation.writes || (op == CALL && stack.Back(2).BitLen() > 0) {
 				return errWriteProtection
 			}
-		}
-	}
-	switch op {
-	case DELEGATECALL:
-		if !in.evm.chainRules.IsEIP7F {
-			return fmt.Errorf("invalid opcode 0x%x", int(op))
-		}
-	case REVERT:
-		if !in.evm.chainRules.IsEIP140F {
-			return fmt.Errorf("invalid opcode 0x%x", int(op))
-		}
-	case STATICCALL:
-		if !in.evm.chainRules.IsEIP214F {
-			return fmt.Errorf("invalid opcode 0x%x", int(op))
-		}
-	case RETURNDATACOPY, RETURNDATASIZE:
-		if !in.evm.chainRules.IsEIP211F {
-			return fmt.Errorf("invalid opcode 0x%x", int(op))
-		}
-	case SHL, SHR, SAR:
-		if !in.evm.chainRules.IsEIP145F {
-			return fmt.Errorf("invalid opcode 0x%x", int(op))
-		}
-	case CREATE2:
-		if !in.evm.chainRules.IsEIP1014F {
-			return fmt.Errorf("invalid opcode 0x%x", int(op))
-		}
-	case EXTCODEHASH:
-		if !in.evm.chainRules.IsEIP1052F {
-			return fmt.Errorf("invalid opcode 0x%x", int(op))
 		}
 	}
 	return nil
@@ -222,22 +192,11 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		if !operation.valid {
 			return nil, fmt.Errorf("invalid opcode 0x%x", int(op))
 		}
-		// If the operation is valid, enforce and write restrictions
-		if in.readOnly && in.evm.chainRules.IsByzantium {
-			// If the interpreter is operating in readonly mode, make sure no
-			// state-modifying operation is performed. The 3rd stack item
-			// for a call operation is the value. Transferring value from one
-			// account to the others means the state is modified and should also
-			// return with an error.
-			if operation.writes || (op == CALL && stack.Back(2).Sign() != 0) {
-				return nil, errWriteProtection
-			}
-		}
-		// Static portion of gas
-		if !contract.UseGas(operation.constantGas) {
-			return nil, ErrOutOfGas
-		}
 		if err := operation.validateStack(stack); err != nil {
+			return nil, err
+		}
+		// If the operation is valid, enforce and write restrictions
+		if err := in.enforceRestrictions(op, operation, stack); err != nil {
 			return nil, err
 		}
 
