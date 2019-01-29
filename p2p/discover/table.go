@@ -313,7 +313,7 @@ func (tab *Table) findnode(n *node, targetKey encPubkey, reply chan<- []*node) {
 		// Avoid recording failures on shutdown.
 		reply <- nil
 		return
-	} else if len(r) == 0 {
+	} else if err != nil || len(r) == 0 {
 		fails++
 		tab.db.UpdateFindFails(n.ID(), n.IP(), fails)
 		log.Trace("Findnode failed", "id", n.ID(), "failcount", fails, "err", err)
@@ -468,7 +468,7 @@ func (tab *Table) doRevalidate(done chan<- struct{}) {
 		// The node responded, move it to the front.
 		last.livenessChecks++
 		log.Debug("Revalidated node", "b", bi, "id", last.ID(), "checks", last.livenessChecks)
-		tab.bumpInBucket(b, last)
+		b.bump(last)
 		return
 	}
 	// No reply received, pick a replacement or delete the node if there aren't
@@ -602,31 +602,6 @@ func (tab *Table) addVerifiedNode(n *node) {
 	if n.ID() == tab.self().ID() {
 		return
 	}
-
-	tab.mutex.Lock()
-	defer tab.mutex.Unlock()
-	b := tab.bucket(n.ID())
-	if tab.bumpInBucket(b, n) {
-		// Already in bucket, moved to front.
-		return
-	}
-	if len(b.entries) >= bucketSize {
-		// Bucket full, maybe add as replacement.
-		tab.addReplacement(b, n)
-		return
-	}
-	if !tab.addIP(b, n.IP()) {
-		// Can't add: IP limit reached.
-		return
-	}
-	// Add to front of bucket.
-	b.entries, _ = pushNode(b.entries, n, bucketSize)
-	b.replacements = deleteNode(b.replacements, n)
-	n.addedAt = time.Now()
-	if tab.nodeAddedHook != nil {
-		tab.nodeAddedHook(n)
-	}
-}
 
 // delete removes an entry from the node table. It is used to evacuate dead nodes.
 func (tab *Table) delete(node *node) {

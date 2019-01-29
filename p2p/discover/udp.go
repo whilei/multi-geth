@@ -663,7 +663,7 @@ func (req *ping) handle(t *udp, from *net.UDPAddr, fromID enode.ID, mac []byte) 
 	n := wrapNode(enode.NewV4(req.senderKey, from.IP, int(req.From.TCP), from.Port))
 	if time.Since(t.db.LastPongReceived(n.ID(), from.IP)) > bondExpiration {
 		t.sendPing(fromID, from, func() {
-			t.tab.addVerifiedNode(n)
+			t.tab.addThroughPing(n)
 		})
 	} else {
 		t.tab.addVerifiedNode(n)
@@ -717,7 +717,7 @@ func (req *findnode) handle(t *udp, from *net.UDPAddr, fromID enode.ID, mac []by
 	t.tab.mutex.Unlock()
 
 	// Send neighbors in chunks with at most maxNeighbors per packet
-	// to stay below the packet size limit.
+	// to stay below the 1280 byte limit.
 	p := neighbors{Expiration: uint64(time.Now().Add(expiration).Unix())}
 	var sent bool
 	for _, n := range closest {

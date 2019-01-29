@@ -85,8 +85,17 @@ func fillBucket(tab *Table, n *node) (last *node) {
 // fillTable adds nodes the table to the end of their corresponding bucket
 // if the bucket is not full. The caller must not hold tab.mutex.
 func fillTable(tab *Table, nodes []*node) {
+	tab.mutex.Lock()
+	defer tab.mutex.Unlock()
+
 	for _, n := range nodes {
-		tab.addSeenNode(n)
+		if n.ID() == tab.self().ID() {
+			continue // don't add self
+		}
+		b := tab.bucket(n.ID())
+		if len(b.entries) < bucketSize {
+			tab.bumpOrAdd(b, n)
+		}
 	}
 }
 
