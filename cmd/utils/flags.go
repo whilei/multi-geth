@@ -164,6 +164,10 @@ var (
 		Name:  "kotti",
 		Usage: "Kotti network: cross-client proof-of-authority test network",
 	}
+	GoerliFlag = cli.BoolFlag{
+		Name:  "goerli",
+		Usage: "Görli network: pre-configured proof-of-authority test network",
+	}
 	ConstantinopleOverrideFlag = cli.Uint64Flag{
 		Name:  "override.constantinople",
 		Usage: "Manually specify constantinople fork-block, overriding the bundled setting",
@@ -757,6 +761,9 @@ func MakeDataDir(ctx *cli.Context) string {
 		}
 		if ctx.GlobalBool(KottiFlag.Name) {
 			return filepath.Join(path, "kotti")
+		}
+		if ctx.GlobalBool(GoerliFlag.Name) {
+			return filepath.Join(path, "goerli")
 		}
 		return path
 	}
