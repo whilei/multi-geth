@@ -32,6 +32,7 @@ import (
 	"github.com/ethereum/go-ethereum/p2p/enode"
 	"github.com/ethereum/go-ethereum/p2p/nat"
 	"github.com/ethereum/go-ethereum/p2p/netutil"
+	"github.com/ethereum/go-ethereum/params"
 )
 
 func main() {
@@ -46,6 +47,7 @@ func main() {
 		runv5       = flag.Bool("v5", false, "run a v5 topic discovery bootnode")
 		verbosity   = flag.Int("verbosity", int(log.LvlInfo), "log verbosity (0-9)")
 		vmodule     = flag.String("vmodule", "", "log verbosity pattern")
+		bootnodes   = flag.String("bootnodes", "", "chain-specific bootnodes to configure the udp server with")
 
 		nodeKey *ecdsa.PrivateKey
 		err     error
@@ -130,6 +132,46 @@ func main() {
 			PrivateKey:  nodeKey,
 			NetRestrict: restrictList,
 		}
+		if *bootnodes != "" {
+			var urls []string
+
+			fmt.Println("using chain bootnodes:", *bootnodes)
+
+			switch *bootnodes {
+			case (utils.TestnetFlag.Name):
+				urls = params.TestnetBootnodes
+			case (utils.EllaismFlag.Name):
+				urls = params.EllaismBootnodes
+			case (utils.ClassicFlag.Name):
+				urls = params.ClassicBootnodes
+			case (utils.SocialFlag.Name):
+				urls = params.SocialBootnodes
+			case (utils.MixFlag.Name):
+				urls = params.MixBootnodes
+			case (utils.EthersocialFlag.Name):
+				urls = params.EthersocialBootnodes
+			case (utils.RinkebyFlag.Name):
+				urls = params.RinkebyBootnodes
+			case (utils.KottiFlag.Name):
+				urls = params.KottiBootnodes
+			case (utils.GoerliFlag.Name):
+				urls = params.GoerliBootnodes
+			default:
+				utils.Fatalf("invalid bootnodes config: ", *bootnodes)
+			}
+
+			cfg.Bootnodes = make([]*enode.Node, 0, len(urls))
+			for _, url := range urls {
+				if url != "" {
+					node, err := enode.ParseV4(url)
+					if err != nil {
+						log.Crit("Bootstrap URL invalid", "enode", url, "err", err)
+					}
+					cfg.Bootnodes = append(cfg.Bootnodes, node)
+				}
+			}
+		}
+
 		if _, err := discover.ListenUDP(conn, ln, cfg); err != nil {
 			utils.Fatalf("%v", err)
 		}
