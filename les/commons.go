@@ -42,7 +42,7 @@ type lesCommons struct {
 // NodeInfo represents a short summary of the Ethereum sub-protocol metadata
 // known about the host peer.
 type NodeInfo struct {
-	Network    uint64                   `json:"network"`    // Ethereum network ID (1=Frontier, 2=Morden, Ropsten=3, Rinkeby=4, Kotti=6)
+	Network    uint64                   `json:"network"`    // Ethereum network ID (1=Frontier, 2=Morden, Ropsten=3, Rinkeby=4)
 	Difficulty *big.Int                 `json:"difficulty"` // Total difficulty of the host's blockchain
 	Genesis    common.Hash              `json:"genesis"`    // SHA3 hash of the host's genesis block
 	Config     *params.ChainConfig      `json:"config"`     // Chain configuration for the fork rules
@@ -80,28 +80,16 @@ func (c *lesCommons) nodeInfo() interface{} {
 	sections, _, _ := c.chtIndexer.Sections()
 	sections2, _, _ := c.bloomTrieIndexer.Sections()
 
-	if !c.protocolManager.lightSync {
-		// convert to client section size if running in server mode
-		sections /= c.iConfig.PairChtSize / c.iConfig.ChtSize
-	}
-
 	if sections2 < sections {
 		sections = sections2
 	}
 	if sections > 0 {
 		sectionIndex := sections - 1
 		sectionHead := c.bloomTrieIndexer.SectionHead(sectionIndex)
-		var chtRoot common.Hash
-		if c.protocolManager.lightSync {
-			chtRoot = light.GetChtRoot(c.chainDb, sectionIndex, sectionHead)
-		} else {
-			idxV2 := (sectionIndex+1)*c.iConfig.PairChtSize/c.iConfig.ChtSize - 1
-			chtRoot = light.GetChtRoot(c.chainDb, idxV2, sectionHead)
-		}
 		cht = params.TrustedCheckpoint{
 			SectionIndex: sectionIndex,
 			SectionHead:  sectionHead,
-			CHTRoot:      chtRoot,
+			CHTRoot:      light.GetChtRoot(c.chainDb, sectionIndex, sectionHead),
 			BloomRoot:    light.GetBloomTrieRoot(c.chainDb, sectionIndex, sectionHead),
 		}
 	}

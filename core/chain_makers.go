@@ -104,6 +104,15 @@ func (b *BlockGen) AddTxWithChain(bc *BlockChain, tx *types.Transaction) {
 	b.receipts = append(b.receipts, receipt)
 }
 
+// AddUncheckedTx forcefully adds a transaction to the block without any
+// validation.
+//
+// AddUncheckedTx will cause consensus failures when used during real
+// chain processing. This is best used in conjunction with raw block insertion.
+func (b *BlockGen) AddUncheckedTx(tx *types.Transaction) {
+	b.txs = append(b.txs, tx)
+}
+
 // Number returns the block number of the block being generated.
 func (b *BlockGen) Number() *big.Int {
 	return new(big.Int).Set(b.header.Number)
@@ -200,7 +209,7 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 			block, _ := b.engine.Finalize(chainreader, b.header, statedb, b.txs, b.uncles, b.receipts)
 
 			// Write state changes to db
-			root, err := statedb.Commit(config.IsEIP161F(b.header.Number))
+			root, err := statedb.Commit(config.IsEIP158(b.header.Number))
 			if err != nil {
 				panic(fmt.Sprintf("state write error: %v", err))
 			}
@@ -233,7 +242,7 @@ func makeHeader(chain consensus.ChainReader, parent *types.Block, state *state.S
 	}
 
 	return &types.Header{
-		Root:       state.IntermediateRoot(chain.Config().IsEIP161F(parent.Number())),
+		Root:       state.IntermediateRoot(chain.Config().IsEIP158(parent.Number())),
 		ParentHash: parent.Hash(),
 		Coinbase:   parent.Coinbase(),
 		Difficulty: engine.CalcDifficulty(chain, time, &types.Header{
