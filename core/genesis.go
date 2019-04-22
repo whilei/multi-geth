@@ -134,7 +134,7 @@ type GenesisMismatchError struct {
 }
 
 func (e *GenesisMismatchError) Error() string {
-	return fmt.Sprintf("database already contains an incompatible genesis block (have %x, new %x)", e.Stored[:8], e.New[:8])
+	return fmt.Sprintf("database contains incompatible genesis (have %x, new %x)", e.Stored, e.New)
 }
 
 // SetupGenesisBlock writes or updates the genesis block in db.
@@ -219,6 +219,8 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *params.ChainConfig {
 		return params.MainnetChainConfig
 	case ghash == params.TestnetGenesisHash:
 		return params.TestnetChainConfig
+	case ghash == params.EllaismGenesisHash:
+		return params.EllaismChainConfig
 	case ghash == params.SocialGenesisHash:
 		return params.SocialChainConfig
 	case ghash == params.MixGenesisHash:
@@ -234,7 +236,7 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *params.ChainConfig {
 // to the given database (or discards it if nil).
 func (g *Genesis) ToBlock(db ethdb.Database) *types.Block {
 	if db == nil {
-		db = ethdb.NewMemDatabase()
+		db = rawdb.NewMemoryDatabase()
 	}
 	statedb, _ := state.New(common.Hash{}, state.NewDatabase(db))
 	for addr, account := range g.Alloc {
@@ -321,6 +323,18 @@ func DefaultGenesisBlock() *Genesis {
 	}
 }
 
+// EllaismGenesisBlock returns the Ellaism genesis block.
+func DefaultEllaismGenesisBlock() *Genesis {
+	return &Genesis{
+		Config:     params.EllaismChainConfig,
+		Nonce:      64,
+		ExtraData:  hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000"),
+		GasLimit:   5000,
+		Difficulty: big.NewInt(1073741824),
+		Alloc:      decodePrealloc(ellaismAllocData),
+	}
+}
+
 // ClassicGenesisBlock returns the Ethereum Classic genesis block.
 func DefaultClassicGenesisBlock() *Genesis {
 	return &Genesis{
@@ -390,18 +404,6 @@ func DefaultRinkebyGenesisBlock() *Genesis {
 		GasLimit:   4700000,
 		Difficulty: big.NewInt(1),
 		Alloc:      decodePrealloc(rinkebyAllocData),
-	}
-}
-
-// DefaultKottiGenesisBlock returns the Kotti network genesis block.
-func DefaultKottiGenesisBlock() *Genesis {
-	return &Genesis{
-		Config:     params.KottiChainConfig,
-		Timestamp:  1546461831,
-		ExtraData:  hexutil.MustDecode("0x000000000000000000000000000000000000000000000000000000000000000025b7955e43adf9c2a01a9475908702cce67f302a6aaf8cba3c9255a2b863415d4db7bae4f4bbca020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
-		GasLimit:   10485760,
-		Difficulty: big.NewInt(1),
-		Alloc:      decodePrealloc(kottiAllocData),
 	}
 }
 
