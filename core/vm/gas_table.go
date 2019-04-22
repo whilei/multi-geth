@@ -383,7 +383,7 @@ func gasCall(gt params.GasTable, evm *EVM, contract *Contract, stack *Stack, mem
 		gas            = gt.Calls
 		transfersValue = stack.Back(2).Sign() != 0
 		address        = common.BigToAddress(stack.Back(1))
-		eip158         = evm.ChainConfig().IsEIP158(evm.BlockNumber)
+		eip158         = evm.ChainConfig().IsEIP161F(evm.BlockNumber)
 	)
 	if eip158 {
 		if transfersValue && evm.StateDB.Empty(address) {
@@ -453,7 +453,7 @@ func gasSuicide(gt params.GasTable, evm *EVM, contract *Contract, stack *Stack, 
 		gas = gt.Suicide
 		var (
 			address = common.BigToAddress(stack.Back(0))
-			eip158  = evm.ChainConfig().IsEIP158(evm.BlockNumber)
+			eip158  = evm.ChainConfig().IsEIP161F(evm.BlockNumber)
 		)
 
 		if eip158 {

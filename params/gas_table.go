@@ -78,7 +78,7 @@ var (
 	}
 	// GasTableConstantinople contain the gas re-prices for
 	// the constantinople phase.
-	GasTableConstantinople = GasTable{
+	GasTableEIP1052 = GasTable{
 		ExtcodeSize: 700,
 		ExtcodeCopy: 700,
 		ExtcodeHash: 400,

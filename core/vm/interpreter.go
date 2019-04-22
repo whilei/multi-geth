@@ -90,16 +90,7 @@ func NewEVMInterpreter(evm *EVM, cfg Config) *EVMInterpreter {
 	// the jump table was initialised. If it was not
 	// we'll set the default jump table.
 	if !cfg.JumpTable[STOP].valid {
-		switch {
-		case evm.ChainConfig().IsConstantinople(evm.BlockNumber):
-			cfg.JumpTable = constantinopleInstructionSet
-		case evm.ChainConfig().IsByzantium(evm.BlockNumber):
-			cfg.JumpTable = byzantiumInstructionSet
-		case evm.ChainConfig().IsHomestead(evm.BlockNumber):
-			cfg.JumpTable = homesteadInstructionSet
-		default:
-			cfg.JumpTable = frontierInstructionSet
-		}
+		cfg.JumpTable = instructionSetForConfig(evm.ChainConfig(), evm.BlockNumber)
 	}
 
 	return &EVMInterpreter{
@@ -212,6 +203,10 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		// Static portion of gas
 		if !contract.UseGas(operation.constantGas) {
 			return nil, ErrOutOfGas
+		}
+		// If the operation is valid, enforce and write restrictions
+		if err := in.enforceRestrictions(op, operation, stack); err != nil {
+			return nil, err
 		}
 
 		var memorySize uint64
