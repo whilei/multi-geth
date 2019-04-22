@@ -28,24 +28,15 @@ import (
 
 // Config are the configuration options for the Interpreter
 type Config struct {
-	// Debug enabled debugging Interpreter options
-	Debug bool
-	// Tracer is the op code logger
-	Tracer Tracer
-	// NoRecursion disabled Interpreter call, callcode,
-	// delegate call and create.
-	NoRecursion bool
-	// Enable recording of SHA3/keccak preimages
-	EnablePreimageRecording bool
-	// JumpTable contains the EVM instruction table. This
-	// may be left uninitialised and will be set to the default
-	// table.
-	JumpTable [256]operation
+	Debug                   bool   // Enables debugging
+	Tracer                  Tracer // Opcode logger
+	NoRecursion             bool   // Disables call, callcode, delegate call and create
+	EnablePreimageRecording bool   // Enables recording of SHA3/keccak preimages
 
-	// Type of the EWASM interpreter
-	EWASMInterpreter string
-	// Type of the EVM interpreter
-	EVMInterpreter string
+	JumpTable [256]operation // EVM instruction table, automatically populated if unset
+
+	EWASMInterpreter string // External EWASM interpreter options
+	EVMInterpreter   string // External EVM interpreter options
 }
 
 // Interpreter is used to run Ethereum based contracts and will utilise the
@@ -68,14 +59,6 @@ type Interpreter interface {
 	// }
 	// ```
 	CanRun([]byte) bool
-}
-
-// keccakState wraps sha3.state. In addition to the usual hash methods, it also supports
-// Read to get a variable amount of data from the hash state. Read is faster than Sum
-// because it doesn't copy the internal state, but also modifies the internal state.
-type keccakState interface {
-	hash.Hash
-	Read([]byte) (int, error)
 }
 
 // EVMInterpreter represents an EVM interpreter
@@ -209,19 +192,21 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		if !operation.valid {
 			return nil, fmt.Errorf("invalid opcode 0x%x", int(op))
 		}
-		if err = operation.validateStack(stack); err != nil {
+		if err := operation.validateStack(stack); err != nil {
 			return nil, err
 		}
 		// If the operation is valid, enforce and write restrictions
-		if err = in.enforceRestrictions(op, operation, stack); err != nil {
+		if err := in.enforceRestrictions(op, operation, stack); err != nil {
 			return nil, err
 		}
 
 		var memorySize uint64
 		// calculate the new memory size and expand the memory to fit
 		// the operation
+		// Memory check needs to be done prior to evaluating the dynamic gas portion,
+		// to detect calculation overflows
 		if operation.memorySize != nil {
-			memSize, overflow := bigUint64(operation.memorySize(stack))
+			memSize, overflow := operation.memorySize(stack)
 			if overflow {
 				return nil, errGasUintOverflow
 			}
@@ -231,11 +216,14 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 				return nil, errGasUintOverflow
 			}
 		}
+		// Dynamic portion of gas
 		// consume the gas and return an error if not enough gas is available.
 		// cost is explicitly set so that the capture state defer method can get the proper cost
-		cost, err = operation.gasCost(in.gasTable, in.evm, contract, stack, mem, memorySize)
-		if err != nil || !contract.UseGas(cost) {
-			return nil, ErrOutOfGas
+		if operation.dynamicGas != nil {
+			cost, err = operation.dynamicGas(in.gasTable, in.evm, contract, stack, mem, memorySize)
+			if err != nil || !contract.UseGas(cost) {
+				return nil, ErrOutOfGas
+			}
 		}
 		if memorySize > 0 {
 			mem.Resize(memorySize)

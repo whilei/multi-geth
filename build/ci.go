@@ -80,6 +80,7 @@ var (
 		executablePath("puppeth"),
 		executablePath("rlpdump"),
 		executablePath("wnode"),
+		executablePath("clef"),
 	}
 
 	// Files that end up in the swarm*.zip archive.
@@ -117,6 +118,10 @@ var (
 		{
 			BinaryName:  "wnode",
 			Description: "Ethereum Whisper diagnostic tool",
+		},
+		{
+			BinaryName:  "clef",
+			Description: "Ethereum account management tool.",
 		},
 	}
 
@@ -156,7 +161,7 @@ var (
 	// Note: yakkety is unsupported because it was officially deprecated on lanchpad.
 	// Note: zesty is unsupported because it was officially deprecated on lanchpad.
 	// Note: artful is unsupported because it was officially deprecated on lanchpad.
-	debDistros = []string{"trusty", "xenial", "bionic", "cosmic"}
+	debDistros = []string{"trusty", "xenial", "bionic", "cosmic", "disco"}
 )
 
 var GOBIN, _ = filepath.Abs(filepath.Join("build", "bin"))
@@ -507,7 +512,7 @@ func doDebianSource(cmdline []string) {
 		for _, distro := range debDistros {
 			meta := newDebMetadata(distro, *signer, env, now, pkg.Name, pkg.Version, pkg.Executables)
 			pkgdir := stageDebianSource(*workdir, meta)
-			debuild := exec.Command("debuild", "-S", "-sa", "-us", "-uc", "-d", "-Zxz")
+			debuild := exec.Command("debuild", "-S", "-sa", "-us", "-uc", "-d")
 			debuild.Dir = pkgdir
 			build.MustRun(debuild)
 
@@ -521,7 +526,7 @@ func doDebianSource(cmdline []string) {
 				build.MustRunCommand("debsign", changes)
 			}
 			if *upload != "" {
-				ppaUpload(*workdir, *upload, *sshUser, []string{source, dsc, changes})
+				build.MustRunCommand("dput", "--passive", "--no-upload-log", *upload, changes)
 			}
 		}
 	}
@@ -800,12 +805,8 @@ func doAndroidArchive(cmdline []string) {
 	if os.Getenv("ANDROID_HOME") == "" {
 		log.Fatal("Please ensure ANDROID_HOME points to your Android SDK")
 	}
-	if os.Getenv("ANDROID_NDK") == "" {
-		log.Fatal("Please ensure ANDROID_NDK points to your Android NDK")
-	}
 	// Build the Android archive and Maven resources
 	build.MustRun(goTool("get", "golang.org/x/mobile/cmd/gomobile", "golang.org/x/mobile/cmd/gobind"))
-	build.MustRun(gomobileTool("init", "--ndk", os.Getenv("ANDROID_NDK")))
 	build.MustRun(gomobileTool("bind", "-ldflags", "-s -w", "--target", "android", "--javapkg", "org.ethereum", "-v", "github.com/ethereum/go-ethereum/mobile"))
 
 	if *local {
