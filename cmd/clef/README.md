@@ -4,15 +4,15 @@ Clef can be used to sign transactions and data and is meant as a replacement for
 This allows DApps not to depend on geth's account management. When a DApp wants to sign data it can send the data to
 the signer, the signer will then provide the user with context and asks the user for permission to sign the data. If
 the users grants the signing request the signer will send the signature back to the DApp.
-  
+
 This setup allows a DApp to connect to a remote Ethereum node and send transactions that are locally signed. This can
 help in situations when a DApp is connected to a remote node because a local Ethereum node is not available, not
 synchronised with the chain or a particular Ethereum node that has no built-in (or limited) account management.
-  
+
 Clef can run as a daemon on the same machine, or off a usb-stick like [usb armory](https://inversepath.com/usbarmory),
 or a separate VM in a [QubesOS](https://www.qubes-os.org/) type os setup.
 
-Check out 
+Check out
 
 * the [tutorial](tutorial.md) for some concrete examples on how the signer works.
 * the [setup docs](docs/setup.md) for some information on how to configure it to work on QubesOS or USBArmory. 
@@ -187,7 +187,7 @@ None
 #### Result
   - address [string]: account address that is derived from the generated key
   - url [string]: location of the keyfile
-  
+
 #### Sample call
 ```json
 {
@@ -221,9 +221,9 @@ None
 #### Result
   - array with account records:
      - account.address [string]: account address that is derived from the generated key
-     - account.type [string]: type of the 
+     - account.type [string]: type of the account
      - account.url [string]: location of the account
-  
+
 #### Sample call
 ```json
 {
@@ -272,7 +272,7 @@ Response
 
 #### Result
   - signed transaction in RLP encoded form [data]
-  
+
 #### Sample call
 ```json
 {
@@ -372,7 +372,7 @@ Bash example:
 
 #### Result
   - calculated signature [data]
-  
+
 #### Sample call
 ```json
 {
@@ -505,7 +505,7 @@ Derive the address from the account that was used to sign data with content type
 
 #### Result
   - derived account [address]
-  
+
 #### Sample call
 ```json
 {
@@ -534,16 +534,16 @@ Response
 #### Import account
    Import a private key into the keystore. The imported key is expected to be encrypted according to the web3 keystore
    format.
-   
+
 #### Arguments
-  - account [object]: key in [web3 keystore format](https://github.com/ethereum/wiki/wiki/Web3-Secret-Storage-Definition) (retrieved with account_export) 
+  - account [object]: key in [web3 keystore format](https://github.com/ethereum/wiki/wiki/Web3-Secret-Storage-Definition) (retrieved with account_export)
 
 #### Result
   - imported key [object]:
      - key.address [address]: address of the imported key
      - key.type [string]: type of the account
      - key.url [string]: key URL
-  
+
 #### Sample call
 ```json
 {
@@ -594,14 +594,14 @@ Response
 #### Export account from keystore
    Export a private key from the keystore. The exported private key is encrypted with the original passphrase. When the
    key is imported later this passphrase is required.
-   
+
 #### Arguments
   - account [address]: export private key that is associated with this account
 
 #### Result
   - exported key, see [web3 keystore format](https://github.com/ethereum/wiki/wiki/Web3-Secret-Storage-Definition) for
   more information
-  
+
 #### Sample call
 ```json
 {
@@ -953,9 +953,9 @@ A UI should conform to the following rules.
 along with the UI.
 
 
-### UI Implementations 
+### UI Implementations
 
-There are a couple of implementation for a UI. We'll try to keep this list up to date. 
+There are a couple of implementation for a UI. We'll try to keep this list up to date.
 
 | Name | Repo | UI type| No external resources| Blocky support| Verifies permissions | Hash information | No secondary storage | Statically linked| Can modify parameters|
 | ---- | ---- | -------| ---- | ---- | ---- |---- | ---- | ---- | ---- |

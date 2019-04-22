@@ -9,14 +9,34 @@ https://camo.githubusercontent.com/915b7be44ada53c290eb157634330494ebe3e30a/6874
 [![Travis](https://travis-ci.org/ethereum/go-ethereum.svg?branch=master)](https://travis-ci.org/ethereum/go-ethereum)
 [![Discord](https://img.shields.io/badge/discord-join%20chat-blue.svg)](https://discord.gg/nthXNEv)
 
-Automated builds are available for stable releases and the unstable master branch.
-Binary archives are published at https://geth.ethereum.org/downloads/.
+Binary archives are published at https://github.com/ethoxy/multi-geth/releases.
 
 ## Building the source
 
 For prerequisites and detailed build instructions please read the
 [Installation Instructions](https://github.com/ethereum/go-ethereum/wiki/Building-Ethereum)
 on the wiki.
+
+Since this is a downstream fork of [ethereum/go-ethereum](https://github.com/ethereum/go-ethereum), you'll want to maintain the go import path and git remotes accordingly.
+This repository should occupy `$GOPATH/src/github.com/ethereum/go-ethereum`, and you can optionally use `git` to use this fork as a default upstream remote.
+On Linux or Mac, this can be accomplished by the following or similar.
+
+For a fresh install, the below. This will set [ethoxy/multi-geth](https://github.com/ethoxy/multi-geth) as as the `git` remote `origin` by default.
+
+```sh
+$ env path=$GOPATH/src/github.com/ethereum mkdir -p $path && cd $path
+$ git clone https://github.com/ethoxy/multi-geth.git go-ethereum && cd go-ethereum
+```
+
+Or, with an existing copy of the ethereum/go-ethereum source, the below. This will set [ethoxy/multi-geth](https://github.com/ethoxy/multi-geth) as the `git` remote `ethoxy`,
+and set the local branch `master` to track this repository's `master` branch.
+
+```sh
+$ cd $GOPATH/src/github.com/ethereum/go-ethereum
+$ git remote add ethoxy https://github.com/ethoxy/multi-geth.git
+$ git fetch ethoxy
+$ git checkout -B master -t ethoxy/master
+```
 
 Building geth requires both a Go (version 1.10 or later) and a C compiler.
 You can install them using your favourite package manager.
@@ -27,6 +47,15 @@ Once the dependencies are installed, run
 or, to build the full suite of utilities:
 
     make all
+
+## Ellaism network
+
+This is originally an [Ellaism
+Project](https://github.com/ellaism). However, A [recent hard
+fork](https://github.com/ellaism/specs/blob/master/specs/2018-0003-wasm-hardfork.md)
+makes Ellaism not feasible to support go-ethereum any more. Existing
+Ellaism users are asked to switch to
+[Parity](https://github.com/paritytech/parity).
 
 ## Executables
 
@@ -74,13 +103,10 @@ This command will:
 
 ### A Full node on the Ethereum test network
 
-Transitioning towards developers, if you'd like to play around with creating Ethereum contracts, you
-almost certainly would like to do that without any real money involved until you get the hang of the
-entire system. In other words, instead of attaching to the main network, you want to join the **test**
-network with your node, which is fully equivalent to the main network, but with play-Ether only.
+To get on Ellaism network and take advantage of fast-sync:
 
 ```
-$ geth --testnet console
+$ geth --ellaism console
 ```
 
 The `console` subcommand has the exact same meaning as above and they are equally useful on the
@@ -88,25 +114,31 @@ testnet too. Please see above for their explanations if you've skipped here.
 
 Specifying the `--testnet` flag, however, will reconfigure your Geth instance a bit:
 
- * Instead of using the default data directory (`~/.ethereum` on Linux for example), Geth will nest
-   itself one level deeper into a `testnet` subfolder (`~/.ethereum/testnet` on Linux). Note, on OSX
-   and Linux this also means that attaching to a running testnet node requires the use of a custom
-   endpoint since `geth attach` will try to attach to a production node endpoint by default. E.g.
-   `geth attach <datadir>/testnet/geth.ipc`. Windows users are not affected by this.
- * Instead of connecting the main Ethereum network, the client will connect to the test network,
-   which uses different P2P bootnodes, different network IDs and genesis states.
-   
-*Note: Although there are some internal protective measures to prevent transactions from crossing
-over between the main network and test network, you should make sure to always use separate accounts
-for play-money and real-money. Unless you manually move accounts, Geth will by default correctly
-separate the two networks and will not make any accounts available between them.*
+To get on Ethereum Classic network and take advantage of fast-sync:
 
-### Full node on the Rinkeby test network
+```
+$ geth --classic console
+```
+
+This command will:
+
+ * Start geth in fast sync mode and start up geth's built-in interactive JavaScript console,
+   connecting to Ethereum Classic network.
+ * Default data directory will be `~/.ethereum/classic`.
+
+### All networks
 
 The above test network is a cross-client one based on the ethash proof-of-work consensus algorithm. As such, it has certain extra overhead and is more susceptible to reorganization attacks due to the network's low difficulty/security. Go Ethereum also supports connecting to a proof-of-authority based test network called [*Rinkeby*](https://www.rinkeby.io) (operated by members of the community). This network is lighter, more secure, but is only supported by go-ethereum.
 
 ```
-$ geth --rinkeby console
+--testnet                            Ropsten network: pre-configured proof-of-work test network
+--ellaism                            Ellaism network: pre-configured Ellaism mainnet
+--classic                            Ethereum Classic network: pre-configured Ethereum Classic mainnet
+--social                             Ethereum Social network: pre-configured Ethereum Social mainnet
+--mix                                MIX network: pre-configured MIX mainnet
+--ethersocial                        Ethersocial network: pre-configured Ethersocial mainnet
+--rinkeby                            Rinkeby network: pre-configured proof-of-authority test network
+--kotti                              Kotti network: cross-client proof-of-authority test network
 ```
 
 ### Configuration

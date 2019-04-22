@@ -129,12 +129,32 @@ var (
 	}
 	NetworkIdFlag = cli.Uint64Flag{
 		Name:  "networkid",
-		Usage: "Network identifier (integer, 1=Frontier, 2=Morden (disused), 3=Ropsten, 4=Rinkeby)",
+		Usage: "Network identifier (integer, 1=Frontier, 2=Morden (disused), 3=Ropsten, 4=Rinkeby, 6=Kotti)",
 		Value: eth.DefaultConfig.NetworkId,
 	}
 	TestnetFlag = cli.BoolFlag{
 		Name:  "testnet",
 		Usage: "Ropsten network: pre-configured proof-of-work test network",
+	}
+	EllaismFlag = cli.BoolFlag{
+		Name:  "ellaism",
+		Usage: "Ellaism network: pre-configured Ellaism mainnet",
+	}
+	ClassicFlag = cli.BoolFlag{
+		Name:  "classic",
+		Usage: "Ethereum Classic network: pre-configured Ethereum Classic mainnet",
+	}
+	SocialFlag = cli.BoolFlag{
+		Name:  "social",
+		Usage: "Ethereum Social network: pre-configured Ethereum Social mainnet",
+	}
+	MixFlag = cli.BoolFlag{
+		Name:  "mix",
+		Usage: "MIX network: pre-configured MIX mainnet",
+	}
+	EthersocialFlag = cli.BoolFlag{
+		Name:  "ethersocial",
+		Usage: "Ethersocial network: pre-configured Ethersocial mainnet",
 	}
 	RinkebyFlag = cli.BoolFlag{
 		Name:  "rinkeby",
@@ -717,6 +737,21 @@ func MakeDataDir(ctx *cli.Context) string {
 		if ctx.GlobalBool(TestnetFlag.Name) {
 			return filepath.Join(path, "testnet")
 		}
+		if ctx.GlobalBool(EllaismFlag.Name) {
+			return filepath.Join(path, "ellaism")
+		}
+		if ctx.GlobalBool(ClassicFlag.Name) {
+			return filepath.Join(path, "classic")
+		}
+		if ctx.GlobalBool(SocialFlag.Name) {
+			return filepath.Join(path, "social")
+		}
+		if ctx.GlobalBool(MixFlag.Name) {
+			return filepath.Join(path, "mix")
+		}
+		if ctx.GlobalBool(EthersocialFlag.Name) {
+			return filepath.Join(path, "ethersocial")
+		}
 		if ctx.GlobalBool(RinkebyFlag.Name) {
 			return filepath.Join(path, "rinkeby")
 		}
@@ -775,6 +810,16 @@ func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 		}
 	case ctx.GlobalBool(TestnetFlag.Name):
 		urls = params.TestnetBootnodes
+	case ctx.GlobalBool(EllaismFlag.Name):
+		urls = params.EllaismBootnodes
+	case ctx.GlobalBool(ClassicFlag.Name):
+		urls = params.ClassicBootnodes
+	case ctx.GlobalBool(SocialFlag.Name):
+		urls = params.SocialBootnodes
+	case ctx.GlobalBool(MixFlag.Name):
+		urls = params.MixBootnodes
+	case ctx.GlobalBool(EthersocialFlag.Name):
+		urls = params.EthersocialBootnodes
 	case ctx.GlobalBool(RinkebyFlag.Name):
 		urls = params.RinkebyBootnodes
 	case ctx.GlobalBool(GoerliFlag.Name):
@@ -1415,6 +1460,26 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *eth.Config) {
 			cfg.NetworkId = 3
 		}
 		cfg.Genesis = core.DefaultTestnetGenesisBlock()
+	case ctx.GlobalBool(EllaismFlag.Name):
+		if !ctx.GlobalIsSet(NetworkIdFlag.Name) {
+			cfg.NetworkId = 64
+		}
+		cfg.Genesis = core.DefaultEllaismGenesisBlock()
+	case ctx.GlobalBool(ClassicFlag.Name):
+		if !ctx.GlobalIsSet(NetworkIdFlag.Name) {
+			cfg.NetworkId = 1
+		}
+		cfg.Genesis = core.DefaultClassicGenesisBlock()
+	case ctx.GlobalBool(SocialFlag.Name):
+		if !ctx.GlobalIsSet(NetworkIdFlag.Name) {
+			cfg.NetworkId = 28
+		}
+		cfg.Genesis = core.DefaultSocialGenesisBlock()
+	case ctx.GlobalBool(EthersocialFlag.Name):
+		if !ctx.GlobalIsSet(NetworkIdFlag.Name) {
+			cfg.NetworkId = 1
+		}
+		cfg.Genesis = core.DefaultEthersocialGenesisBlock()
 	case ctx.GlobalBool(RinkebyFlag.Name):
 		if !ctx.GlobalIsSet(NetworkIdFlag.Name) {
 			cfg.NetworkId = 4
@@ -1576,6 +1641,16 @@ func MakeGenesis(ctx *cli.Context) *core.Genesis {
 	switch {
 	case ctx.GlobalBool(TestnetFlag.Name):
 		genesis = core.DefaultTestnetGenesisBlock()
+	case ctx.GlobalBool(EllaismFlag.Name):
+		genesis = core.DefaultEllaismGenesisBlock()
+	case ctx.GlobalBool(ClassicFlag.Name):
+		genesis = core.DefaultClassicGenesisBlock()
+	case ctx.GlobalBool(SocialFlag.Name):
+		genesis = core.DefaultSocialGenesisBlock()
+	case ctx.GlobalBool(MixFlag.Name):
+		genesis = core.DefaultMixGenesisBlock()
+	case ctx.GlobalBool(EthersocialFlag.Name):
+		genesis = core.DefaultEthersocialGenesisBlock()
 	case ctx.GlobalBool(RinkebyFlag.Name):
 		genesis = core.DefaultRinkebyGenesisBlock()
 	case ctx.GlobalBool(GoerliFlag.Name):
