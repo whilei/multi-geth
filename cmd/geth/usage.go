@@ -73,12 +73,12 @@ var AppHelpFlagGroups = []flagGroup{
 			utils.NoUSBFlag,
 			utils.NetworkIdFlag,
 			utils.TestnetFlag,
-			utils.EllaismFlag,
 			utils.ClassicFlag,
 			utils.SocialFlag,
 			utils.MixFlag,
 			utils.EthersocialFlag,
 			utils.RinkebyFlag,
+			utils.KottiFlag,
 			utils.GoerliFlag,
 			utils.SyncModeFlag,
 			utils.ExitWhenSyncedFlag,
@@ -86,8 +86,6 @@ var AppHelpFlagGroups = []flagGroup{
 			utils.EthStatsURLFlag,
 			utils.IdentityFlag,
 			utils.LightServFlag,
-			utils.LightBandwidthInFlag,
-			utils.LightBandwidthOutFlag,
 			utils.LightPeersFlag,
 			utils.LightKDFFlag,
 			utils.WhitelistFlag,
@@ -144,7 +142,7 @@ var AppHelpFlagGroups = []flagGroup{
 			utils.CacheDatabaseFlag,
 			utils.CacheTrieFlag,
 			utils.CacheGCFlag,
-			utils.CacheNoPrefetchFlag,
+			utils.TrieCacheGenFlag,
 		},
 	},
 	{
@@ -153,7 +151,6 @@ var AppHelpFlagGroups = []flagGroup{
 			utils.UnlockedAccountFlag,
 			utils.PasswordFileFlag,
 			utils.ExternalSignerFlag,
-			utils.InsecureUnlockAllowedFlag,
 		},
 	},
 	{
@@ -233,8 +230,16 @@ var AppHelpFlagGroups = []flagGroup{
 		}, debug.Flags...),
 	},
 	{
-		Name:  "METRICS AND STATS",
-		Flags: metricsFlags,
+		Name: "METRICS AND STATS",
+		Flags: []cli.Flag{
+			utils.MetricsEnabledFlag,
+			utils.MetricsEnableInfluxDBFlag,
+			utils.MetricsInfluxDBEndpointFlag,
+			utils.MetricsInfluxDBDatabaseFlag,
+			utils.MetricsInfluxDBUsernameFlag,
+			utils.MetricsInfluxDBPasswordFlag,
+			utils.MetricsInfluxDBTagsFlag,
+		},
 	},
 	{
 		Name:  "WHISPER (EXPERIMENTAL)",
@@ -309,7 +314,7 @@ func init() {
 					categorized[flag.String()] = struct{}{}
 				}
 			}
-			var uncategorized []cli.Flag
+			uncategorized := []cli.Flag{}
 			for _, flag := range data.(*cli.App).Flags {
 				if _, ok := categorized[flag.String()]; !ok {
 					if strings.HasPrefix(flag.GetName(), "dashboard") {

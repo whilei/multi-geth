@@ -103,7 +103,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	// Update the state with pending changes
 	var root []byte
 	if config.IsEIP658F(header.Number) {
-		statedb.Finalise(true)
+		statedb.Finalise(config.IsEIP161F(header.Number))
 	} else {
 		root = statedb.IntermediateRoot(config.IsEIP161F(header.Number)).Bytes()
 	}
@@ -121,9 +121,6 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	// Set the receipt logs and create a bloom for filtering
 	receipt.Logs = statedb.GetLogs(tx.Hash())
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
-	receipt.BlockHash = statedb.BlockHash()
-	receipt.BlockNumber = header.Number
-	receipt.TransactionIndex = uint(statedb.TxIndex())
 
 	return receipt, gas, err
 }
