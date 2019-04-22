@@ -201,7 +201,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 
 			// Fetch and execute the next block trace tasks
 			for task := range tasks {
-				signer := types.MakeSigner(api.eth.blockchain.Config(), task.block.Number())
+				signer := types.MakeSigner(api.config, task.block.Number())
 
 				// Trace all the transactions contained within
 				for i, tx := range task.block.Transactions() {
@@ -215,7 +215,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 						break
 					}
 					// Only delete empty objects if EIP158/161 (a.k.a Spurious Dragon) is in effect
-					task.statedb.Finalise(api.eth.blockchain.Config().IsEIP158HF(task.block.Number()))
+					task.statedb.Finalise(api.eth.blockchain.Config().IsEIP161F(task.block.Number()))
 					task.results[i] = &txTraceResult{Result: res}
 				}
 				// Stream the result back to the user or abort on teardown
@@ -295,7 +295,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 				break
 			}
 			// Finalize the state so any modifications are written to the trie
-			root, err := statedb.Commit(api.eth.blockchain.Config().IsEIP158(block.Number()))
+			root, err := statedb.Commit(true)
 			if err != nil {
 				failed = err
 				break
@@ -460,7 +460,7 @@ func (api *PrivateDebugAPI) traceBlock(ctx context.Context, block *types.Block, 
 	}
 	// Execute all the transaction contained within the block concurrently
 	var (
-		signer = types.MakeSigner(api.eth.blockchain.Config(), block.Number())
+		signer = types.MakeSigner(api.config, block.Number())
 
 		txs     = block.Transactions()
 		results = make([]*txTraceResult, len(txs))
@@ -501,14 +501,14 @@ func (api *PrivateDebugAPI) traceBlock(ctx context.Context, block *types.Block, 
 		msg, _ := tx.AsMessage(signer)
 		vmctx := core.NewEVMContext(msg, block.Header(), api.eth.blockchain, nil)
 
-		vmenv := vm.NewEVM(vmctx, statedb, api.eth.blockchain.Config(), vm.Config{})
+		vmenv := vm.NewEVM(vmctx, statedb, api.config, vm.Config{})
 		if _, _, _, err := core.ApplyMessage(vmenv, msg, new(core.GasPool).AddGas(msg.Gas())); err != nil {
 			failed = err
 			break
 		}
 		// Finalize the state so any modifications are written to the trie
 		// Only delete empty objects if EIP158/161 (a.k.a Spurious Dragon) is in effect
-		statedb.Finalise(vmenv.ChainConfig().IsEIP158HF(block.Number()))
+		statedb.Finalise(vmenv.ChainConfig().IsEIP161F(block.Number()))
 	}
 	close(jobs)
 	pend.Wait()
@@ -526,7 +526,13 @@ func (api *PrivateDebugAPI) traceBlock(ctx context.Context, block *types.Block, 
 func (api *PrivateDebugAPI) standardTraceBlockToFile(ctx context.Context, block *types.Block, config *StdTraceConfig) ([]string, error) {
 	// If we're tracing a single transaction, make sure it's present
 	if config != nil && config.TxHash != (common.Hash{}) {
-		if !containsTx(block, config.TxHash) {
+		var exists bool
+		for _, tx := range block.Transactions() {
+			if exists = (tx.Hash() == config.TxHash); exists {
+				break
+			}
+		}
+		if !exists {
 			return nil, fmt.Errorf("transaction %#x not found in block", config.TxHash)
 		}
 	}
@@ -561,7 +567,7 @@ func (api *PrivateDebugAPI) standardTraceBlockToFile(ctx context.Context, block 
 
 	// Execute transaction, either tracing all or just the requested one
 	var (
-		signer = types.MakeSigner(api.eth.blockchain.Config(), block.Number())
+		signer = types.MakeSigner(api.config, block.Number())
 		dumps  []string
 	)
 	for i, tx := range block.Transactions() {
@@ -595,7 +601,7 @@ func (api *PrivateDebugAPI) standardTraceBlockToFile(ctx context.Context, block 
 			}
 		}
 		// Execute the transaction and flush any traces to disk
-		vmenv := vm.NewEVM(vmctx, statedb, api.eth.blockchain.Config(), vmConf)
+		vmenv := vm.NewEVM(vmctx, statedb, api.config, vmConf)
 		_, _, _, err = core.ApplyMessage(vmenv, msg, new(core.GasPool).AddGas(msg.Gas()))
 		if writer != nil {
 			writer.Flush()
@@ -609,7 +615,7 @@ func (api *PrivateDebugAPI) standardTraceBlockToFile(ctx context.Context, block 
 		}
 		// Finalize the state so any modifications are written to the trie
 		// Only delete empty objects if EIP158/161 (a.k.a Spurious Dragon) is in effect
-		statedb.Finalise(vmenv.ChainConfig().IsEIP158HF(block.Number()))
+		statedb.Finalise(vmenv.ChainConfig().IsEIP161F(block.Number()))
 
 		// If we've traced the transaction we were looking for, abort
 		if tx.Hash() == txHash {
@@ -617,17 +623,6 @@ func (api *PrivateDebugAPI) standardTraceBlockToFile(ctx context.Context, block 
 		}
 	}
 	return dumps, nil
-}
-
-// containsTx reports whether the transaction with a certain hash
-// is contained within the specified block.
-func containsTx(block *types.Block, hash common.Hash) bool {
-	for _, tx := range block.Transactions() {
-		if tx.Hash() == hash {
-			return true
-		}
-	}
-	return false
 }
 
 // computeStateDB retrieves the state database associated with a certain block.
@@ -756,7 +751,7 @@ func (api *PrivateDebugAPI) traceTx(ctx context.Context, message core.Message, v
 		tracer = vm.NewStructLogger(config.LogConfig)
 	}
 	// Run the transaction with tracing enabled.
-	vmenv := vm.NewEVM(vmctx, statedb, api.eth.blockchain.Config(), vm.Config{Debug: true, Tracer: tracer})
+	vmenv := vm.NewEVM(vmctx, statedb, api.config, vm.Config{Debug: true, Tracer: tracer})
 
 	ret, gas, failed, err := core.ApplyMessage(vmenv, message, new(core.GasPool).AddGas(message.Gas()))
 	if err != nil {
@@ -796,7 +791,7 @@ func (api *PrivateDebugAPI) computeTxEnv(blockHash common.Hash, txIndex int, ree
 		return nil, vm.Context{}, nil, err
 	}
 	// Recompute transactions up to the target index.
-	signer := types.MakeSigner(api.eth.blockchain.Config(), block.Number())
+	signer := types.MakeSigner(api.config, block.Number())
 
 	for idx, tx := range block.Transactions() {
 		// Assemble the transaction call message and return if the requested offset
@@ -806,13 +801,13 @@ func (api *PrivateDebugAPI) computeTxEnv(blockHash common.Hash, txIndex int, ree
 			return msg, context, statedb, nil
 		}
 		// Not yet the searched for transaction, execute on top of the current state
-		vmenv := vm.NewEVM(context, statedb, api.eth.blockchain.Config(), vm.Config{})
+		vmenv := vm.NewEVM(context, statedb, api.config, vm.Config{})
 		if _, _, _, err := core.ApplyMessage(vmenv, msg, new(core.GasPool).AddGas(tx.Gas())); err != nil {
 			return nil, vm.Context{}, nil, fmt.Errorf("transaction %#x failed: %v", tx.Hash(), err)
 		}
 		// Ensure any modifications are committed to the state
 		// Only delete empty objects if EIP158/161 (a.k.a Spurious Dragon) is in effect
-		statedb.Finalise(vmenv.ChainConfig().IsEIP158HF(block.Number()))
+		statedb.Finalise(vmenv.ChainConfig().IsEIP161F(block.Number()))
 	}
 	return nil, vm.Context{}, nil, fmt.Errorf("transaction index %d out of range for block %#x", txIndex, blockHash)
 }
