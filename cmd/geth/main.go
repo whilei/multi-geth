@@ -44,7 +44,8 @@ import (
 )
 
 const (
-	clientIdentifier = "MultiGeth" // Client identifier to advertise over the network
+	// NOTE
+	clientIdentifier = "geth" // Client identifier to advertise over the network
 )
 
 var (
